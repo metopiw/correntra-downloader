@@ -1,0 +1,22 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net8.0-windows10.0.17763.0</TargetFramework>
+    <RootNamespace>Correntra.Agent</RootNamespace>
+    <EnableWindowsTargeting>true</EnableWindowsTargeting>
+    <AssemblyName>Correntra.Agent</AssemblyName>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Correntra.Core\Correntra.Core.csproj" />
+    <ProjectReference Include="..\Correntra.Transfer\Correntra.Transfer.csproj" />
+    <ProjectReference Include="..\Correntra.Media\Correntra.Media.csproj" />
+    <ProjectReference Include="..\Correntra.Infrastructure\Correntra.Infrastructure.csproj" />
+    <ProjectReference Include="..\Correntra.Platform.Windows\Correntra.Platform.Windows.csproj" />
+    <PackageReference Include="Microsoft.Data.Sqlite" />
+    <PackageReference Include="Microsoft.Extensions.Hosting" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Console" />
+  </ItemGroup>
+
+</Project>

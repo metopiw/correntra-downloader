@@ -1,0 +1,34 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        x:Class="Correntra.Desktop.Views.UpdatePromptDialog"
+        Width="540" Height="350"
+        MinWidth="480" MinHeight="300"
+        WindowStartupLocation="CenterOwner"
+        CanResize="False"
+        ShowInTaskbar="False"
+        Icon="/Assets/correntra.ico"
+        Background="#10151D"
+        Title="Correntra Downloader">
+  <Grid RowDefinitions="Auto,*,Auto" Margin="28">
+    <Grid ColumnDefinitions="72,*" ColumnSpacing="18">
+      <Border Width="64" Height="64" CornerRadius="16" Background="#162534">
+        <Image Source="/Assets/correntra-mark.png" Stretch="Uniform" Margin="7" />
+      </Border>
+      <StackPanel Grid.Column="1" VerticalAlignment="Center" Spacing="4">
+        <TextBlock x:Name="HeadingText" FontSize="21" FontWeight="SemiBold" Foreground="#F5F8FA" />
+        <TextBlock x:Name="VersionText" FontSize="13" Foreground="#63D4CC" />
+      </StackPanel>
+    </Grid>
+    <Border Grid.Row="1" Margin="0,22,0,18" Padding="16" CornerRadius="10" Background="#151C25">
+      <ScrollViewer VerticalScrollBarVisibility="Auto">
+        <TextBlock x:Name="NotesText" TextWrapping="Wrap" Foreground="#BBC7D2" LineHeight="20" />
+      </ScrollViewer>
+    </Border>
+    <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right" Spacing="10">
+      <Button x:Name="LaterButton" MinWidth="112" Padding="18,9" Click="OnLaterClick" />
+      <Button x:Name="InstallButton" MinWidth="150" Padding="18,9" Click="OnInstallClick"
+              Background="#087D86" Foreground="White" />
+    </StackPanel>
+  </Grid>
+</Window>
+

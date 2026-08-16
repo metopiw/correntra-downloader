@@ -1,0 +1,30 @@
+CORRENTra TARAYICI UZANTISI / BROWSER EXTENSION
+================================================
+
+Uzanti Chrome Web Store'a yuklenmez. Correntra klasorundeki
+"browser-extension" klasorunu disaridan yukleyin:
+
+1. Chrome icin chrome://extensions adresini acin.
+   Edge icin edge://extensions adresini acin.
+2. "Gelistirici modu / Developer mode" secenegini acin.
+3. "Paketlenmemis oge yukle / Load unpacked" dugmesine basin.
+4. Bu dosyanin yanindaki "browser-extension" klasorunu secin.
+5. Correntra'yi bir kez calistirin. Yerel mesajlasma baglantisi kullanici
+   hesabiniz icin otomatik kaydedilir.
+
+Sabit uzanti kimligi: fbngehclfngjenhlchnkojooliaifggj
+
+Uzanti ana anahtarini kapattiginiz anda yeni indirmeleri tarayici devralir.
+Site bazli anahtar yalnizca acik alan adi icin yakalamayi kapatir.
+
+DRM/EME ile korunan Netflix, Disney+ ve benzeri akislarda koruma asilmaz.
+Correntra yalnizca korumasiz dosya ve medya isteklerini indirir.
+
+------------------------------------------------
+
+The extension is intentionally distributed outside the Chrome Web Store.
+Load the adjacent "browser-extension" folder using Developer mode and
+"Load unpacked". Start Correntra once to register its per-user Native
+Messaging host. Turning off the extension's master switch immediately returns
+new downloads to the browser. DRM/EME protection is never bypassed.
+

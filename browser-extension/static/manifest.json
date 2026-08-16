@@ -1,0 +1,41 @@
+{
+  "manifest_version": 3,
+  "name": "__MSG_extensionName__",
+  "short_name": "Correntra",
+  "version": "0.1.0",
+  "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAv2lmCnhhw/GrncB3GDsmV7opCCgVlpSV40QkFgkWcOYD+1mpKBxqLBb/S7uODw9S8QTfLA03IrcDYwO5Eiw+GZbsxq2RTx1NALTryfV/F8B7qIlWrl7q5ZDtz2LG5pExPnwDHQlHz+ZnnIGed99QPkk4J8qCP62R6JR+Ndw3Hlhi9/w4Z66GDhCUyM7r+7jAb2KzYW01WHTlsR5DSLg+MxcQIjRPWkU8phAkufNQdnkPyqmV48wiz0Qd89fC1lWhic+GnmLwGSIfdX4SXOV7o7Hk/dCUK9gg7UDxxDdPbiom1TLZrjrKojyOccU2NhJvAGdHAYG+zbghn/8PKO4x0QIDAQAB",
+  "description": "__MSG_extensionDescription__",
+  "default_locale": "en",
+  "minimum_chrome_version": "102",
+  "permissions": [
+    "activeTab",
+    "downloads",
+    "nativeMessaging",
+    "scripting",
+    "storage",
+    "webRequest"
+  ],
+  "optional_permissions": ["cookies"],
+  "optional_host_permissions": ["http://*/*", "https://*/*"],
+  "background": {
+    "service_worker": "background.js",
+    "type": "module"
+  },
+  "icons": {
+    "16": "icons/icon-16.png",
+    "32": "icons/icon-32.png",
+    "48": "icons/icon-48.png",
+    "128": "icons/icon-128.png"
+  },
+  "action": {
+    "default_title": "Correntra Downloader",
+    "default_popup": "popup.html",
+    "default_icon": {
+      "16": "icons/icon-16.png",
+      "32": "icons/icon-32.png"
+    }
+  },
+  "content_security_policy": {
+    "extension_pages": "script-src 'self'; object-src 'self'"
+  }
+}

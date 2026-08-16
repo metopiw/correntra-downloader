@@ -1,0 +1,36 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  build-and-test:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.404
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: browser-extension/package-lock.json
+      - name: Restore .NET tools
+        run: dotnet tool restore
+      - name: Restore .NET dependencies
+        run: dotnet restore Correntra.sln --locked-mode
+      - name: Test .NET
+        run: dotnet test Correntra.sln -c Release --no-restore
+      - name: Restore extension dependencies
+        working-directory: browser-extension
+        run: npm ci
+      - name: Test extension
+        working-directory: browser-extension
+        run: npm test
+      - name: Build extension
+        working-directory: browser-extension
+        run: npm run build
+

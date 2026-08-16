@@ -1,0 +1,26 @@
+<Project>
+  <PropertyGroup>
+    <LangVersion>12.0</LangVersion>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <AnalysisLevel>latest-recommended</AnalysisLevel>
+    <Deterministic>true</Deterministic>
+    <ContinuousIntegrationBuild Condition="'$(CI)' == 'true'">true</ContinuousIntegrationBuild>
+    <Product>Correntra Downloader</Product>
+    <Company>Correntra</Company>
+    <Authors>Correntra</Authors>
+    <Copyright>Copyright (c) 2026 Correntra. All rights reserved.</Copyright>
+    <VersionPrefix>0.1.0</VersionPrefix>
+    <WindowsSdkPackageVersion Condition="$([MSBuild]::IsOSPlatform('Windows'))">10.0.17763.56</WindowsSdkPackageVersion>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)' == 'Release'">
+    <DebugType>embedded</DebugType>
+    <PublishReadyToRun>false</PublishReadyToRun>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="$(MSBuildProjectName.EndsWith('.Tests'))">
+    <NoWarn>$(NoWarn);CA1707</NoWarn>
+  </PropertyGroup>
+</Project>

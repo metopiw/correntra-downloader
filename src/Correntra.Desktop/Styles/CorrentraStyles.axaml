@@ -1,0 +1,184 @@
+<Styles xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+  <Style Selector="Window">
+    <Setter Property="Background" Value="{DynamicResource Corr.Background}" />
+    <Setter Property="Foreground" Value="{DynamicResource Corr.TextPrimary}" />
+    <Setter Property="FontFamily" Value="Inter" />
+  </Style>
+
+  <Style Selector="Window.dialog">
+    <Setter Property="Background" Value="{DynamicResource Corr.Panel}" />
+    <Setter Property="WindowStartupLocation" Value="CenterOwner" />
+    <Setter Property="CanResize" Value="False" />
+    <Setter Property="ShowInTaskbar" Value="False" />
+  </Style>
+
+  <Style Selector="TextBlock.muted">
+    <Setter Property="Foreground" Value="{DynamicResource Corr.TextSecondary}" />
+  </Style>
+
+  <Style Selector="TextBlock.eyebrow">
+    <Setter Property="Foreground" Value="{DynamicResource Corr.Accent}" />
+    <Setter Property="FontWeight" Value="SemiBold" />
+    <Setter Property="FontSize" Value="11" />
+    <Setter Property="LetterSpacing" Value="1.1" />
+  </Style>
+
+  <Style Selector="TextBlock.dialogHeading">
+    <Setter Property="FontSize" Value="22" />
+    <Setter Property="FontWeight" Value="SemiBold" />
+    <Setter Property="Foreground" Value="{DynamicResource Corr.TextPrimary}" />
+  </Style>
+
+  <Style Selector="TextBlock.sectionTitle">
+    <Setter Property="FontSize" Value="17" />
+    <Setter Property="FontWeight" Value="SemiBold" />
+    <Setter Property="Foreground" Value="{DynamicResource Corr.TextPrimary}" />
+  </Style>
+
+  <Style Selector="Border.card">
+    <Setter Property="Background" Value="{DynamicResource Corr.PanelRaised}" />
+    <Setter Property="BorderBrush" Value="{DynamicResource Corr.Border}" />
+    <Setter Property="BorderThickness" Value="1" />
+    <Setter Property="CornerRadius" Value="8" />
+    <Setter Property="Padding" Value="16" />
+  </Style>
+
+  <Style Selector="Button">
+    <Setter Property="MinHeight" Value="32" />
+    <Setter Property="Padding" Value="14,6" />
+    <Setter Property="CornerRadius" Value="5" />
+    <Setter Property="FontWeight" Value="Medium" />
+  </Style>
+
+  <Style Selector="Button.accent">
+    <Setter Property="Background" Value="{DynamicResource Corr.Accent}" />
+    <Setter Property="Foreground" Value="#061510" />
+    <Setter Property="BorderBrush" Value="{DynamicResource Corr.Accent}" />
+  </Style>
+
+  <Style Selector="Button.accent:pointerover /template/ ContentPresenter">
+    <Setter Property="Background" Value="{DynamicResource Corr.AccentHover}" />
+  </Style>
+
+  <Style Selector="Button.secondary">
+    <Setter Property="Background" Value="{DynamicResource Corr.PanelRaised}" />
+    <Setter Property="Foreground" Value="{DynamicResource Corr.TextPrimary}" />
+    <Setter Property="BorderBrush" Value="{DynamicResource Corr.Border}" />
+  </Style>
+
+  <Style Selector="Button.toolbar">
+    <Setter Property="Width" Value="76" />
+    <Setter Property="Height" Value="70" />
+    <Setter Property="Padding" Value="4,6" />
+    <Setter Property="Background" Value="Transparent" />
+    <Setter Property="BorderThickness" Value="0" />
+    <Setter Property="CornerRadius" Value="7" />
+    <Setter Property="HorizontalContentAlignment" Value="Center" />
+    <Setter Property="VerticalContentAlignment" Value="Center" />
+  </Style>
+
+  <Style Selector="Button.toolbar:pointerover /template/ ContentPresenter">
+    <Setter Property="Background" Value="{DynamicResource Corr.PanelHover}" />
+  </Style>
+
+  <Style Selector="Button.titlebar">
+    <Setter Property="Width" Value="46" />
+    <Setter Property="Height" Value="36" />
+    <Setter Property="MinHeight" Value="0" />
+    <Setter Property="Padding" Value="0" />
+    <Setter Property="CornerRadius" Value="0" />
+    <Setter Property="Background" Value="Transparent" />
+    <Setter Property="BorderThickness" Value="0" />
+    <Setter Property="Foreground" Value="{DynamicResource Corr.TextSecondary}" />
+  </Style>
+
+  <Style Selector="Button.titlebar:pointerover /template/ ContentPresenter">
+    <Setter Property="Background" Value="{DynamicResource Corr.PanelHover}" />
+  </Style>
+
+  <Style Selector="Button.titlebar.close:pointerover /template/ ContentPresenter">
+    <Setter Property="Background" Value="#D8445A" />
+    <Setter Property="TextElement.Foreground" Value="White" />
+  </Style>
+
+  <Style Selector="Menu.mainMenu">
+    <Setter Property="Background" Value="{DynamicResource Corr.TitleBackground}" />
+    <Setter Property="Foreground" Value="{DynamicResource Corr.TextPrimary}" />
+  </Style>
+
+  <Style Selector="Menu.mainMenu MenuItem">
+    <Setter Property="Padding" Value="12,5" />
+    <Setter Property="FontSize" Value="12" />
+  </Style>
+
+  <Style Selector="TextBox, ComboBox, NumericUpDown, TimePicker">
+    <Setter Property="MinHeight" Value="34" />
+  </Style>
+
+  <Style Selector="TextBox.searchBox">
+    <Setter Property="CornerRadius" Value="17" />
+    <Setter Property="Background" Value="{DynamicResource Corr.PanelRaised}" />
+    <Setter Property="BorderBrush" Value="{DynamicResource Corr.Border}" />
+    <Setter Property="Padding" Value="34,6,12,6" />
+  </Style>
+
+  <Style Selector="TreeView.categoryTree">
+    <Setter Property="Background" Value="Transparent" />
+    <Setter Property="BorderThickness" Value="0" />
+  </Style>
+
+  <Style Selector="TreeView.categoryTree TreeViewItem">
+    <Setter Property="Padding" Value="2" />
+    <Setter Property="Margin" Value="0,1" />
+  </Style>
+
+  <Style Selector="TreeView.categoryTree TreeViewItem:selected /template/ ContentPresenter#PART_HeaderPresenter">
+    <Setter Property="Background" Value="{DynamicResource Corr.Selection}" />
+  </Style>
+
+  <Style Selector="DataGrid.downloadGrid">
+    <Setter Property="Background" Value="{DynamicResource Corr.Panel}" />
+    <Setter Property="BorderThickness" Value="0" />
+    <Setter Property="GridLinesVisibility" Value="Horizontal" />
+    <Setter Property="HorizontalGridLinesBrush" Value="{DynamicResource Corr.BorderSubtle}" />
+    <Setter Property="VerticalGridLinesBrush" Value="{DynamicResource Corr.BorderSubtle}" />
+    <Setter Property="RowBackground" Value="{DynamicResource Corr.Panel}" />
+    <Setter Property="HorizontalScrollBarVisibility" Value="Auto" />
+    <Setter Property="VerticalScrollBarVisibility" Value="Auto" />
+  </Style>
+
+  <Style Selector="DataGrid.downloadGrid DataGridColumnHeader">
+    <Setter Property="Background" Value="{DynamicResource Corr.PanelRaised}" />
+    <Setter Property="Foreground" Value="{DynamicResource Corr.TextSecondary}" />
+    <Setter Property="BorderBrush" Value="{DynamicResource Corr.Border}" />
+    <Setter Property="BorderThickness" Value="0,0,1,1" />
+    <Setter Property="Height" Value="32" />
+    <Setter Property="Padding" Value="10,0" />
+    <Setter Property="FontWeight" Value="SemiBold" />
+    <Setter Property="FontSize" Value="11" />
+  </Style>
+
+  <Style Selector="DataGrid.downloadGrid DataGridRow">
+    <Setter Property="MinHeight" Value="34" />
+  </Style>
+
+  <Style Selector="DataGrid.downloadGrid DataGridRow:nth-child(even)">
+    <Setter Property="Background" Value="{DynamicResource Corr.PanelRaised}" />
+  </Style>
+
+  <Style Selector="DataGrid.downloadGrid DataGridCell">
+    <Setter Property="Padding" Value="10,5" />
+    <Setter Property="BorderThickness" Value="0,0,1,0" />
+    <Setter Property="BorderBrush" Value="{DynamicResource Corr.BorderSubtle}" />
+  </Style>
+
+  <Style Selector="TabControl.settingsTabs TabItem">
+    <Setter Property="Padding" Value="14,9" />
+    <Setter Property="FontWeight" Value="Medium" />
+  </Style>
+
+  <Style Selector="Separator">
+    <Setter Property="Background" Value="{DynamicResource Corr.BorderSubtle}" />
+  </Style>
+</Styles>

@@ -1,0 +1,12 @@
+Correntra Downloader Source License
+
+Copyright (c) 2026 Correntra. All rights reserved.
+
+The source code in this repository is made available for inspection,
+development, testing, and personal evaluation. No permission is granted to
+redistribute, sublicense, sell, or publish modified or unmodified copies
+without prior written permission from the copyright holder.
+
+Third-party components retain their own licenses. See
+THIRD-PARTY-NOTICES.md and the licenses shipped with release artifacts.
+

@@ -1,0 +1,4 @@
+Correntra Downloader; Windows 10 ve 11 icin hizli, devam ettirilebilir dosya ve korumasiz medya indirme yoneticisidir.
+
+Kurulum masaustu uygulamasini, arka plan indirme motorunu, Native Messaging hostunu ve disaridan yuklenebilir Chrome/Edge uzantisini icerir.
+

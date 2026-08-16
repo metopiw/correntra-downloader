@@ -1,0 +1,90 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:Correntra.Desktop.ViewModels"
+        xmlns:models="using:Correntra.Desktop.Models"
+        x:Class="Correntra.Desktop.Views.QueueScheduleDialog"
+        x:DataType="vm:QueueScheduleViewModel"
+        x:CompileBindings="True"
+        Classes="dialog"
+        Title="{DynamicResource Dialog.Schedule.Title}"
+        Icon="/Assets/correntra.ico"
+        Width="660"
+        Height="600">
+  <Grid RowDefinitions="Auto,*,Auto">
+    <Border Background="{DynamicResource Corr.PanelRaised}"
+            BorderBrush="{DynamicResource Corr.Border}"
+            BorderThickness="0,0,0,1"
+            Padding="24,18">
+      <Grid ColumnDefinitions="54,*">
+        <Border Width="44" Height="44" CornerRadius="13" Background="{DynamicResource Corr.AccentMuted}">
+          <PathIcon Data="{StaticResource Icon.Schedule}" Width="24" Height="24" Foreground="{DynamicResource Corr.Warning}" />
+        </Border>
+        <StackPanel Grid.Column="1" Spacing="4">
+          <TextBlock Text="{DynamicResource Dialog.Schedule.Heading}" Classes="dialogHeading" />
+          <CheckBox Content="{DynamicResource Dialog.Schedule.Enabled}" IsChecked="{Binding IsEnabled}" />
+        </StackPanel>
+      </Grid>
+    </Border>
+
+    <ScrollViewer Grid.Row="1">
+      <StackPanel Margin="24,18" Spacing="16">
+        <StackPanel Spacing="8">
+          <TextBlock Text="{DynamicResource Dialog.Schedule.Days}" FontWeight="SemiBold" />
+          <UniformGrid Columns="7">
+            <CheckBox Content="{DynamicResource Day.Mon}" IsChecked="{Binding Monday}" />
+            <CheckBox Content="{DynamicResource Day.Tue}" IsChecked="{Binding Tuesday}" />
+            <CheckBox Content="{DynamicResource Day.Wed}" IsChecked="{Binding Wednesday}" />
+            <CheckBox Content="{DynamicResource Day.Thu}" IsChecked="{Binding Thursday}" />
+            <CheckBox Content="{DynamicResource Day.Fri}" IsChecked="{Binding Friday}" />
+            <CheckBox Content="{DynamicResource Day.Sat}" IsChecked="{Binding Saturday}" />
+            <CheckBox Content="{DynamicResource Day.Sun}" IsChecked="{Binding Sunday}" />
+          </UniformGrid>
+        </StackPanel>
+
+        <Grid ColumnDefinitions="*,*">
+          <StackPanel Spacing="6" Margin="0,0,8,0">
+            <TextBlock Text="{DynamicResource Dialog.Schedule.Start}" FontWeight="SemiBold" />
+            <TimePicker SelectedTime="{Binding StartTime}" ClockIdentifier="24HourClock" />
+          </StackPanel>
+          <StackPanel Grid.Column="1" Spacing="6" Margin="8,0,0,0">
+            <TextBlock Text="{DynamicResource Dialog.Schedule.Stop}" FontWeight="SemiBold" />
+            <TimePicker SelectedTime="{Binding StopTime}" ClockIdentifier="24HourClock" />
+          </StackPanel>
+        </Grid>
+
+        <Grid ColumnDefinitions="*,*">
+          <StackPanel Spacing="6" Margin="0,0,8,0">
+            <TextBlock Text="{DynamicResource Dialog.Schedule.Concurrent}" FontWeight="SemiBold" />
+            <NumericUpDown Value="{Binding ConcurrentDownloads}" Minimum="1" Maximum="32" Increment="1" />
+          </StackPanel>
+          <StackPanel Grid.Column="1" Spacing="6" Margin="8,0,0,0">
+            <TextBlock Text="{DynamicResource Dialog.Schedule.SpeedLimit}" FontWeight="SemiBold" />
+            <NumericUpDown Value="{Binding SpeedLimitKilobytes}" Minimum="0" Maximum="10000000" Increment="128" />
+          </StackPanel>
+        </Grid>
+
+        <StackPanel Spacing="6">
+          <TextBlock Text="{DynamicResource Dialog.Schedule.Action}" FontWeight="SemiBold" />
+          <ComboBox ItemsSource="{Binding CompletionActions}" SelectedItem="{Binding SelectedCompletionAction}">
+            <ComboBox.ItemTemplate>
+              <DataTemplate x:DataType="models:LocalizedOption">
+                <TextBlock Text="{Binding DisplayName}" />
+              </DataTemplate>
+            </ComboBox.ItemTemplate>
+          </ComboBox>
+        </StackPanel>
+      </StackPanel>
+    </ScrollViewer>
+
+    <Border Grid.Row="2"
+            Background="{DynamicResource Corr.TitleBackground}"
+            BorderBrush="{DynamicResource Corr.Border}"
+            BorderThickness="0,1,0,0"
+            Padding="16,12">
+      <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Spacing="8">
+        <Button Classes="secondary" Content="{DynamicResource Common.Cancel}" Click="OnCancelClick" IsCancel="True" />
+        <Button Classes="accent" Content="{DynamicResource Common.Save}" Click="OnSaveClick" IsDefault="True" />
+      </StackPanel>
+    </Border>
+  </Grid>
+</Window>

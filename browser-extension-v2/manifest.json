@@ -1,0 +1,21 @@
+{
+  "manifest_version": 3,
+  "name": "Correntra Catch",
+  "short_name": "Catch",
+  "version": "2.1.0",
+  "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAv2lmCnhhw/GrncB3GDsmV7opCCgVlpSV40QkFgkWcOYD+1mpKBxqLBb/S7uODw9S8QTfLA03IrcDYwO5Eiw+GZbsxq2RTx1NALTryfV/F8B7qIlWrl7q5ZDtz2LG5pExPnwDHQlHz+ZnnIGed99QPkk4J8qCP62R6JR+Ndw3Hlhi9/w4Z66GDhCUyM7r+7jAb2KzYW01WHTlsR5DSLg+MxcQIjRPWkU8phAkufNQdnkPyqmV48wiz0Qd89fC1lWhic+GnmLwGSIfdX4SXOV7o7Hk/dCUK9gg7UDxxDdPbiom1TLZrjrKojyOccU2NhJvAGdHAYG+zbghn/8PKO4x0QIDAQAB",
+  "description": "Hands browser downloads to Correntra Downloader over a local bridge. No native messaging, no video capture.",
+  "minimum_chrome_version": "110",
+  "permissions": ["downloads", "storage"],
+  "host_permissions": ["http://127.0.0.1:27410/*"],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "Correntra Catch"
+  },
+  "content_security_policy": {
+    "extension_pages": "script-src 'self'; object-src 'self'"
+  }
+}

@@ -1,0 +1,13 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <RootNamespace>Correntra.Transfer</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Correntra.Core\Correntra.Core.csproj" />
+    <PackageReference Include="System.IO.Hashing" />
+  </ItemGroup>
+
+</Project>

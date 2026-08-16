@@ -1,0 +1,190 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:Correntra.Desktop.ViewModels"
+        xmlns:models="using:Correntra.Desktop.Models"
+        x:Class="Correntra.Desktop.Views.SettingsWindow"
+        x:DataType="vm:SettingsViewModel"
+        x:CompileBindings="True"
+        Classes="dialog"
+        Title="{DynamicResource Settings.Title}"
+        Icon="/Assets/correntra.ico"
+        Width="940"
+        Height="690"
+        CanResize="True"
+        MinWidth="820"
+        MinHeight="590">
+  <Grid RowDefinitions="72,*,57">
+    <Border Background="{DynamicResource Corr.PanelRaised}"
+            BorderBrush="{DynamicResource Corr.Border}"
+            BorderThickness="0,0,0,1"
+            Padding="22,0">
+      <StackPanel Orientation="Horizontal" Spacing="13" VerticalAlignment="Center">
+        <Border Width="40" Height="40" CornerRadius="12" Background="{DynamicResource Corr.AccentMuted}">
+          <PathIcon Data="{StaticResource Icon.Settings}" Width="23" Height="23" Foreground="{DynamicResource Corr.Purple}" />
+        </Border>
+        <StackPanel Spacing="2">
+          <TextBlock Text="{DynamicResource Settings.Title}" FontSize="21" FontWeight="SemiBold" />
+          <TextBlock Text="{DynamicResource App.Tagline}" Classes="muted" FontSize="11" />
+        </StackPanel>
+      </StackPanel>
+    </Border>
+
+    <TabControl Grid.Row="1" Classes="settingsTabs" TabStripPlacement="Left">
+      <TabItem Header="{DynamicResource Settings.General}">
+        <ScrollViewer>
+          <StackPanel Margin="26,22" Spacing="16">
+            <TextBlock Text="{DynamicResource Settings.General.Heading}" Classes="sectionTitle" />
+            <Border Classes="card">
+              <StackPanel Spacing="12">
+                <CheckBox Content="{DynamicResource Settings.General.StartWindows}" IsChecked="{Binding StartWithWindows}" />
+                <CheckBox Content="{DynamicResource Settings.General.Tray}" IsChecked="{Binding MinimizeToTray}" />
+                <CheckBox Content="{DynamicResource Settings.General.Notifications}" IsChecked="{Binding ShowNotifications}" />
+                <CheckBox Content="{DynamicResource Settings.General.Clipboard}" IsChecked="{Binding MonitorClipboard}" />
+              </StackPanel>
+            </Border>
+            <Grid ColumnDefinitions="*,*">
+              <StackPanel Spacing="6" Margin="0,0,8,0">
+                <TextBlock Text="{DynamicResource Settings.General.Theme}" FontWeight="SemiBold" />
+                <ComboBox ItemsSource="{Binding Themes}" SelectedItem="{Binding SelectedTheme}">
+                  <ComboBox.ItemTemplate>
+                    <DataTemplate x:DataType="models:LocalizedOption"><TextBlock Text="{Binding DisplayName}" /></DataTemplate>
+                  </ComboBox.ItemTemplate>
+                </ComboBox>
+              </StackPanel>
+              <StackPanel Grid.Column="1" Spacing="6" Margin="8,0,0,0">
+                <TextBlock Text="{DynamicResource Settings.General.Language}" FontWeight="SemiBold" />
+                <ComboBox ItemsSource="{Binding Languages}" SelectedItem="{Binding SelectedLanguage}">
+                  <ComboBox.ItemTemplate>
+                    <DataTemplate x:DataType="models:LocalizedOption"><TextBlock Text="{Binding DisplayName}" /></DataTemplate>
+                  </ComboBox.ItemTemplate>
+                </ComboBox>
+              </StackPanel>
+            </Grid>
+          </StackPanel>
+        </ScrollViewer>
+      </TabItem>
+
+      <TabItem Header="{DynamicResource Settings.Browser}">
+        <ScrollViewer>
+          <StackPanel Margin="26,22" Spacing="16">
+            <TextBlock Text="{DynamicResource Settings.Browser.Heading}" Classes="sectionTitle" />
+            <Border Classes="card">
+              <StackPanel Spacing="12">
+                <CheckBox Content="{DynamicResource Settings.Browser.Capture}" IsChecked="{Binding CaptureBrowserDownloads}" />
+                <CheckBox Content="{DynamicResource Settings.Browser.Media}" IsChecked="{Binding ShowMediaPanel}" />
+                <CheckBox Content="{DynamicResource Settings.Browser.Session}" IsChecked="{Binding UseTemporarySession}" />
+              </StackPanel>
+            </Border>
+            <StackPanel Spacing="6">
+              <TextBlock Text="{DynamicResource Settings.Browser.Exceptions}" FontWeight="SemiBold" />
+              <TextBox Text="{Binding ExcludedSites}" Watermark="example.com; intranet.local" />
+            </StackPanel>
+            <StackPanel Spacing="6">
+              <TextBlock Text="{DynamicResource Settings.Browser.Extensions}" FontWeight="SemiBold" />
+              <TextBox Text="{Binding ExcludedExtensions}" />
+            </StackPanel>
+          </StackPanel>
+        </ScrollViewer>
+      </TabItem>
+
+      <TabItem Header="{DynamicResource Settings.Transfers}">
+        <ScrollViewer>
+          <StackPanel Margin="26,22" Spacing="16">
+            <TextBlock Text="{DynamicResource Settings.Transfers.Heading}" Classes="sectionTitle" />
+            <Border Classes="card">
+              <Grid ColumnDefinitions="*,160" RowDefinitions="Auto,Auto,Auto,Auto">
+                <TextBlock Text="{DynamicResource Settings.Transfers.Concurrent}" VerticalAlignment="Center" Margin="0,0,12,12" />
+                <NumericUpDown Grid.Column="1" Value="{Binding ConcurrentDownloads}" Minimum="1" Maximum="32" Margin="0,0,0,12" />
+                <TextBlock Grid.Row="1" Text="{DynamicResource Settings.Transfers.Segments}" VerticalAlignment="Center" Margin="0,0,12,12" />
+                <NumericUpDown Grid.Row="1" Grid.Column="1" Value="{Binding SegmentsPerDownload}" Minimum="1" Maximum="32" Margin="0,0,0,12" />
+                <TextBlock Grid.Row="2" Text="{DynamicResource Settings.Transfers.GlobalLimit}" VerticalAlignment="Center" Margin="0,0,12,12" />
+                <NumericUpDown Grid.Row="2" Grid.Column="1" Value="{Binding GlobalSpeedLimit}" Minimum="0" Maximum="10000000" Margin="0,0,0,12" />
+                <CheckBox Grid.Row="3" Grid.ColumnSpan="2" Content="{DynamicResource Settings.Transfers.Retry}" IsChecked="{Binding RetryTemporaryErrors}" />
+              </Grid>
+            </Border>
+          </StackPanel>
+        </ScrollViewer>
+      </TabItem>
+
+      <TabItem Header="{DynamicResource Settings.Categories}">
+        <ScrollViewer>
+          <StackPanel Margin="26,22" Spacing="14">
+            <TextBlock Text="{DynamicResource Settings.Categories.Heading}" Classes="sectionTitle" />
+            <TextBlock Text="{DynamicResource Settings.Categories.Description}" Classes="muted" TextWrapping="Wrap" />
+            <Border Classes="card">
+              <Grid ColumnDefinitions="150,*" RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto">
+                <TextBlock Text="{DynamicResource Category.Programs}" FontWeight="SemiBold" Margin="0,7" /><TextBlock Grid.Column="1" Text="EXE, MSI, MSIX, APPX" Classes="muted" Margin="0,7" />
+                <TextBlock Grid.Row="1" Text="{DynamicResource Category.Video}" FontWeight="SemiBold" Margin="0,7" /><TextBlock Grid.Row="1" Grid.Column="1" Text="MP4, MKV, WEBM, AVI, MOV" Classes="muted" Margin="0,7" />
+                <TextBlock Grid.Row="2" Text="{DynamicResource Category.Music}" FontWeight="SemiBold" Margin="0,7" /><TextBlock Grid.Row="2" Grid.Column="1" Text="MP3, M4A, FLAC, OGG, WAV" Classes="muted" Margin="0,7" />
+                <TextBlock Grid.Row="3" Text="{DynamicResource Category.Documents}" FontWeight="SemiBold" Margin="0,7" /><TextBlock Grid.Row="3" Grid.Column="1" Text="PDF, DOCX, XLSX, PPTX, TXT" Classes="muted" Margin="0,7" />
+                <TextBlock Grid.Row="4" Text="{DynamicResource Category.Compressed}" FontWeight="SemiBold" Margin="0,7" /><TextBlock Grid.Row="4" Grid.Column="1" Text="ZIP, 7Z, RAR, TAR, GZ" Classes="muted" Margin="0,7" />
+                <TextBlock Grid.Row="5" Text="{DynamicResource Category.Images}" FontWeight="SemiBold" Margin="0,7" /><TextBlock Grid.Row="5" Grid.Column="1" Text="JPG, PNG, WEBP, GIF, SVG" Classes="muted" Margin="0,7" />
+              </Grid>
+            </Border>
+          </StackPanel>
+        </ScrollViewer>
+      </TabItem>
+
+      <TabItem Header="{DynamicResource Settings.Scheduler}">
+        <StackPanel Margin="26,22" Spacing="14">
+          <TextBlock Text="{DynamicResource Settings.Scheduler.Heading}" Classes="sectionTitle" />
+          <TextBlock Text="{DynamicResource Settings.Scheduler.Description}" Classes="muted" TextWrapping="Wrap" />
+          <Border Classes="card">
+            <StackPanel Spacing="14">
+              <PathIcon Data="{StaticResource Icon.Schedule}" Width="45" Height="45" Foreground="{DynamicResource Corr.Warning}" HorizontalAlignment="Left" />
+              <Button Classes="accent" Content="{DynamicResource Settings.Scheduler.Open}" Click="OnOpenSchedulerClick" HorizontalAlignment="Left" />
+            </StackPanel>
+          </Border>
+        </StackPanel>
+      </TabItem>
+
+      <TabItem Header="{DynamicResource Settings.Privacy}">
+        <ScrollViewer>
+          <StackPanel Margin="26,22" Spacing="16">
+            <TextBlock Text="{DynamicResource Settings.Privacy.Heading}" Classes="sectionTitle" />
+            <Border Classes="card" Background="{DynamicResource Corr.AccentMuted}">
+              <Grid ColumnDefinitions="32,*">
+                <PathIcon Data="{StaticResource Icon.Check}" Width="20" Height="20" Foreground="{DynamicResource Corr.Accent}" />
+                <TextBlock Grid.Column="1" Text="{DynamicResource Settings.Privacy.NoAds}" TextWrapping="Wrap" VerticalAlignment="Center" />
+              </Grid>
+            </Border>
+            <CheckBox Content="{DynamicResource Settings.Privacy.Crash}" IsChecked="{Binding CrashReportsRequireApproval}" />
+            <CheckBox Content="{DynamicResource Settings.Privacy.History}" IsChecked="{Binding KeepHistory}" />
+            <Button Classes="secondary" Content="{DynamicResource Settings.Privacy.Clear}" HorizontalAlignment="Left" />
+          </StackPanel>
+        </ScrollViewer>
+      </TabItem>
+
+      <TabItem Header="{DynamicResource Settings.Updates}">
+        <ScrollViewer>
+          <StackPanel Margin="26,22" Spacing="16">
+            <TextBlock Text="{DynamicResource Settings.Updates.Heading}" Classes="sectionTitle" />
+            <Border Classes="card">
+              <StackPanel Spacing="12">
+                <TextBlock Text="{DynamicResource About.Version}" Foreground="{DynamicResource Corr.Accent}" FontSize="16" FontWeight="SemiBold" />
+                <CheckBox Content="{DynamicResource Settings.Updates.AutoCheck}" IsChecked="{Binding CheckUpdatesAtStartup}" />
+                <CheckBox Content="{DynamicResource Settings.Updates.Prerelease}" IsChecked="{Binding IncludePrereleases}" />
+                <StackPanel Spacing="6">
+                  <TextBlock Text="{DynamicResource Settings.Updates.Channel}" FontWeight="SemiBold" />
+                  <ComboBox SelectedItem="{Binding UpdateChannel}" ItemsSource="{Binding UpdateChannels}" />
+                </StackPanel>
+                <Button Classes="secondary" Content="{DynamicResource Settings.Updates.Check}" HorizontalAlignment="Left" />
+              </StackPanel>
+            </Border>
+          </StackPanel>
+        </ScrollViewer>
+      </TabItem>
+    </TabControl>
+
+    <Border Grid.Row="2"
+            Background="{DynamicResource Corr.TitleBackground}"
+            BorderBrush="{DynamicResource Corr.Border}"
+            BorderThickness="0,1,0,0"
+            Padding="16,12">
+      <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Spacing="8">
+        <Button Classes="secondary" Content="{DynamicResource Common.Cancel}" Click="OnCancelClick" IsCancel="True" />
+        <Button Classes="accent" Content="{DynamicResource Common.Save}" Click="OnSaveClick" IsDefault="True" />
+      </StackPanel>
+    </Border>
+  </Grid>
+</Window>

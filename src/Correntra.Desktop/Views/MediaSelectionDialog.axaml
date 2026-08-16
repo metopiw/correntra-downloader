@@ -1,0 +1,84 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:Correntra.Desktop.ViewModels"
+        x:Class="Correntra.Desktop.Views.MediaSelectionDialog"
+        x:DataType="vm:MediaSelectionViewModel"
+        x:CompileBindings="True"
+        Classes="dialog"
+        Title="{DynamicResource Dialog.Media.Title}"
+        Icon="/Assets/correntra.ico"
+        Width="720"
+        Height="590">
+  <Grid RowDefinitions="Auto,*,Auto">
+    <Border Background="{DynamicResource Corr.PanelRaised}"
+            BorderBrush="{DynamicResource Corr.Border}"
+            BorderThickness="0,0,0,1"
+            Padding="24,18">
+      <Grid ColumnDefinitions="54,*">
+        <Border Width="44" Height="44" CornerRadius="13" Background="{DynamicResource Corr.AccentMuted}">
+          <PathIcon Data="{StaticResource Icon.Media}" Width="25" Height="25" Foreground="{DynamicResource Corr.Blue}" />
+        </Border>
+        <StackPanel Grid.Column="1" Spacing="4">
+          <TextBlock Text="{DynamicResource Dialog.Media.Heading}" Classes="dialogHeading" />
+          <TextBlock Text="{DynamicResource Dialog.Media.Description}" Classes="muted" TextWrapping="Wrap" />
+        </StackPanel>
+      </Grid>
+    </Border>
+
+    <ScrollViewer Grid.Row="1">
+      <Grid Margin="24,18" ColumnDefinitions="*,*" RowDefinitions="Auto,Auto,Auto">
+        <StackPanel Grid.Row="0" Grid.Column="0" Spacing="6" Margin="0,0,8,12">
+          <TextBlock Text="{DynamicResource Dialog.Media.Video}" FontWeight="SemiBold" />
+          <ComboBox ItemsSource="{Binding VideoTracks}"
+                    SelectedItem="{Binding SelectedVideoTrack}"
+                    IsEnabled="{Binding !AudioOnly}"
+                    AutomationProperties.Name="{DynamicResource Dialog.Media.Video}" />
+        </StackPanel>
+        <StackPanel Grid.Row="0" Grid.Column="1" Spacing="6" Margin="8,0,0,12">
+          <TextBlock Text="{DynamicResource Dialog.Media.Audio}" FontWeight="SemiBold" />
+          <ComboBox ItemsSource="{Binding AudioTracks}"
+                    SelectedItem="{Binding SelectedAudioTrack}"
+                    AutomationProperties.Name="{DynamicResource Dialog.Media.Audio}" />
+        </StackPanel>
+
+        <StackPanel Grid.Row="1" Grid.Column="0" Spacing="6" Margin="0,0,8,12">
+          <TextBlock Text="{DynamicResource Dialog.Media.Format}" FontWeight="SemiBold" />
+          <ComboBox ItemsSource="{Binding Formats}"
+                    SelectedItem="{Binding SelectedFormat}"
+                    AutomationProperties.Name="{DynamicResource Dialog.Media.Format}" />
+        </StackPanel>
+        <StackPanel Grid.Row="1" Grid.Column="1" Spacing="6" Margin="8,0,0,12">
+          <TextBlock Text="{DynamicResource Dialog.Media.Subtitles}" FontWeight="SemiBold" />
+          <ComboBox ItemsSource="{Binding Subtitles}"
+                    SelectedItem="{Binding SelectedSubtitle}"
+                    IsEnabled="{Binding !AudioOnly}"
+                    AutomationProperties.Name="{DynamicResource Dialog.Media.Subtitles}" />
+        </StackPanel>
+
+        <Border Grid.Row="2" Grid.ColumnSpan="2" Classes="card" Margin="0,4,0,0">
+          <Grid ColumnDefinitions="*,Auto">
+            <StackPanel Spacing="10">
+              <CheckBox Content="{DynamicResource Dialog.Media.AudioOnly}" IsChecked="{Binding AudioOnly}" />
+              <CheckBox Content="{DynamicResource Dialog.Media.Metadata}" IsChecked="{Binding EmbedMetadata}" />
+            </StackPanel>
+            <StackPanel Grid.Column="1" HorizontalAlignment="Right" VerticalAlignment="Center" Spacing="3">
+              <TextBlock Text="{DynamicResource Dialog.Media.Approximate}" Classes="muted" FontSize="11" HorizontalAlignment="Right" />
+              <TextBlock Text="{Binding ApproximateSize}" Foreground="{DynamicResource Corr.Accent}" FontSize="19" FontWeight="SemiBold" HorizontalAlignment="Right" />
+            </StackPanel>
+          </Grid>
+        </Border>
+      </Grid>
+    </ScrollViewer>
+
+    <Border Grid.Row="2"
+            Background="{DynamicResource Corr.TitleBackground}"
+            BorderBrush="{DynamicResource Corr.Border}"
+            BorderThickness="0,1,0,0"
+            Padding="16,12">
+      <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Spacing="8">
+        <Button Classes="secondary" Content="{DynamicResource Common.Cancel}" Click="OnCancelClick" IsCancel="True" />
+        <Button Classes="accent" Content="{DynamicResource Dialog.Media.Download}" Click="OnDownloadClick" IsDefault="True" />
+      </StackPanel>
+    </Border>
+  </Grid>
+</Window>

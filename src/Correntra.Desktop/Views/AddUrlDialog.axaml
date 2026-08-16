@@ -1,0 +1,61 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:Correntra.Desktop.ViewModels"
+        x:Class="Correntra.Desktop.Views.AddUrlDialog"
+        x:DataType="vm:AddUrlDialogViewModel"
+        x:CompileBindings="True"
+        Classes="dialog"
+        Title="{DynamicResource Dialog.AddUrl.Title}"
+        Icon="/Assets/correntra.ico"
+        Width="620"
+        Height="350">
+  <Grid RowDefinitions="Auto,*,Auto">
+    <Border Background="{DynamicResource Corr.PanelRaised}"
+            BorderBrush="{DynamicResource Corr.Border}"
+            BorderThickness="0,0,0,1"
+            Padding="24,20">
+      <Grid ColumnDefinitions="54,*">
+        <Border Width="44" Height="44" CornerRadius="13" Background="{DynamicResource Corr.AccentMuted}">
+          <PathIcon Data="{StaticResource Icon.Add}" Width="23" Height="23" Foreground="{DynamicResource Corr.Accent}" />
+        </Border>
+        <StackPanel Grid.Column="1" Spacing="4">
+          <TextBlock Text="{DynamicResource Dialog.AddUrl.Heading}" Classes="dialogHeading" />
+          <TextBlock Text="{DynamicResource Dialog.AddUrl.Description}"
+                     Classes="muted"
+                     TextWrapping="Wrap"
+                     LineHeight="19" />
+        </StackPanel>
+      </Grid>
+    </Border>
+
+    <StackPanel Grid.Row="1" Margin="24,18" Spacing="7">
+      <TextBlock Text="{DynamicResource Dialog.AddUrl.Url}" FontWeight="SemiBold" />
+      <Grid ColumnDefinitions="*,Auto">
+        <TextBox x:Name="UrlTextBox"
+                 Text="{Binding Url, UpdateSourceTrigger=PropertyChanged}"
+                 Watermark="{DynamicResource Dialog.AddUrl.Placeholder}"
+                 AutomationProperties.Name="{DynamicResource Dialog.AddUrl.Url}" />
+        <Button Grid.Column="1"
+                Classes="secondary"
+                Content="{DynamicResource Dialog.AddUrl.FromClipboard}"
+                Click="OnPasteClick"
+                Margin="8,0,0,0" />
+      </Grid>
+      <TextBlock Text="{DynamicResource Dialog.AddUrl.Invalid}"
+                 Foreground="{DynamicResource Corr.Danger}"
+                 FontSize="11"
+                 IsVisible="{Binding HasValidationError}" />
+    </StackPanel>
+
+    <Border Grid.Row="2"
+            Background="{DynamicResource Corr.TitleBackground}"
+            BorderBrush="{DynamicResource Corr.Border}"
+            BorderThickness="0,1,0,0"
+            Padding="16,12">
+      <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Spacing="8">
+        <Button Classes="secondary" Content="{DynamicResource Common.Cancel}" Click="OnCancelClick" IsCancel="True" />
+        <Button Classes="accent" Content="{DynamicResource Common.Add}" Click="OnAddClick" IsDefault="True" />
+      </StackPanel>
+    </Border>
+  </Grid>
+</Window>

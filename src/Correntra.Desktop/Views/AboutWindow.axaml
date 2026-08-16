@@ -1,0 +1,44 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        x:Class="Correntra.Desktop.Views.AboutWindow"
+        Classes="dialog"
+        Title="{DynamicResource About.Title}"
+        Icon="/Assets/correntra.ico"
+        Width="540"
+        Height="500">
+  <Grid RowDefinitions="*,Auto">
+    <StackPanel Margin="38,32" Spacing="16" HorizontalAlignment="Center">
+      <Image Source="/Assets/correntra-mark.png"
+             Width="120"
+             Height="120"
+             Stretch="Uniform"
+             AutomationProperties.Name="{DynamicResource App.Name}" />
+      <TextBlock Text="{DynamicResource App.Name}" FontSize="28" FontWeight="Bold" HorizontalAlignment="Center" />
+      <TextBlock Text="{DynamicResource App.Tagline}" Foreground="{DynamicResource Corr.Accent}" FontSize="14" FontWeight="SemiBold" HorizontalAlignment="Center" />
+      <Border Background="{DynamicResource Corr.AccentMuted}" CornerRadius="9" Padding="12,5" HorizontalAlignment="Center">
+        <TextBlock Text="{DynamicResource About.Version}" Foreground="{DynamicResource Corr.Accent}" FontWeight="SemiBold" />
+      </Border>
+      <TextBlock Text="{DynamicResource About.Description}"
+                 Classes="muted"
+                 TextAlignment="Center"
+                 TextWrapping="Wrap"
+                 MaxWidth="420"
+                 LineHeight="20" />
+      <Separator Width="330" Margin="0,3" />
+      <TextBlock Text="{DynamicResource About.License}"
+                 Classes="muted"
+                 FontSize="11"
+                 TextAlignment="Center"
+                 TextWrapping="Wrap"
+                 MaxWidth="420" />
+    </StackPanel>
+
+    <Border Grid.Row="1"
+            Background="{DynamicResource Corr.TitleBackground}"
+            BorderBrush="{DynamicResource Corr.Border}"
+            BorderThickness="0,1,0,0"
+            Padding="16,12">
+      <Button Classes="accent" Content="{DynamicResource Common.Close}" Click="OnCloseClick" HorizontalAlignment="Right" IsDefault="True" IsCancel="True" />
+    </Border>
+  </Grid>
+</Window>

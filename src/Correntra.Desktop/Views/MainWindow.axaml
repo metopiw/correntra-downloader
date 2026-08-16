@@ -1,0 +1,415 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:Correntra.Desktop.ViewModels"
+        xmlns:models="using:Correntra.Desktop.Models"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        mc:Ignorable="d"
+        d:DesignWidth="1360"
+        d:DesignHeight="820"
+        x:Class="Correntra.Desktop.Views.MainWindow"
+        x:DataType="vm:MainViewModel"
+        x:CompileBindings="True"
+        Icon="/Assets/correntra.ico"
+        Title="{DynamicResource App.Name}"
+        Width="1360"
+        Height="820"
+        MinWidth="1000"
+        MinHeight="650"
+        SystemDecorations="None"
+        ExtendClientAreaToDecorationsHint="True"
+        ExtendClientAreaChromeHints="NoChrome"
+        ExtendClientAreaTitleBarHeightHint="36">
+
+  <Design.DataContext>
+    <vm:DesignMainViewModel />
+  </Design.DataContext>
+
+  <Window.KeyBindings>
+    <KeyBinding Gesture="Ctrl+U" Command="{Binding AddUrlCommand}" />
+    <KeyBinding Gesture="F5" Command="{Binding ResumeCommand}" />
+    <KeyBinding Gesture="F6" Command="{Binding PauseCommand}" />
+    <KeyBinding Gesture="F7" Command="{Binding StopCommand}" />
+    <KeyBinding Gesture="Delete" Command="{Binding DeleteCommand}" />
+    <KeyBinding Gesture="Ctrl+P" Command="{Binding ShowOptionsCommand}" />
+  </Window.KeyBindings>
+
+  <Border BorderBrush="{DynamicResource Corr.Border}"
+          BorderThickness="1"
+          Background="{DynamicResource Corr.Background}">
+    <Grid RowDefinitions="36,29,80,*,31">
+      <!-- Custom title area -->
+      <Border Grid.Row="0"
+              Background="{DynamicResource Corr.TitleBackground}"
+              PointerPressed="OnTitleBarPointerPressed">
+        <Grid ColumnDefinitions="*,Auto">
+          <StackPanel Orientation="Horizontal" Margin="12,0" Spacing="10" VerticalAlignment="Center">
+            <Image Source="/Assets/correntra-mark.png"
+                   Width="25"
+                   Height="25"
+                   Stretch="Uniform"
+                   AutomationProperties.Name="{DynamicResource App.Name}" />
+            <TextBlock Text="{DynamicResource App.Name}"
+                       FontSize="12"
+                       FontWeight="SemiBold"
+                       VerticalAlignment="Center" />
+            <Border Width="1" Height="14" Background="{DynamicResource Corr.Border}" Margin="2,0" />
+            <TextBlock Text="{DynamicResource App.Tagline}"
+                       Classes="muted"
+                       FontSize="11"
+                       VerticalAlignment="Center" />
+          </StackPanel>
+
+          <StackPanel Grid.Column="1" Orientation="Horizontal">
+            <Button Classes="titlebar"
+                    Click="OnMinimizeClick"
+                    AutomationProperties.Name="{DynamicResource Title.Minimize}"
+                    ToolTip.Tip="{DynamicResource Title.Minimize}">
+              <Path Data="M8,12 L18,12" Stroke="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}" StrokeThickness="1.4" />
+            </Button>
+            <Button Classes="titlebar"
+                    Click="OnMaximizeClick"
+                    AutomationProperties.Name="{DynamicResource Title.Maximize}"
+                    ToolTip.Tip="{DynamicResource Title.Maximize}">
+              <Path Data="M9,8 L17,8 L17,16 L9,16 Z" Stroke="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}" StrokeThickness="1.2" />
+            </Button>
+            <Button Classes="titlebar close"
+                    Click="OnCloseClick"
+                    AutomationProperties.Name="{DynamicResource Title.Close}"
+                    ToolTip.Tip="{DynamicResource Title.Close}">
+              <Path Data="M9,8 L17,16 M17,8 L9,16" Stroke="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}" StrokeThickness="1.4" />
+            </Button>
+          </StackPanel>
+        </Grid>
+      </Border>
+
+      <!-- Familiar desktop menu strip -->
+      <Menu Grid.Row="1" Classes="mainMenu">
+        <MenuItem Header="{DynamicResource Menu.Tasks}">
+          <MenuItem Header="{DynamicResource Menu.AddUrl}" Command="{Binding AddUrlCommand}" InputGesture="Ctrl+U" />
+          <MenuItem Header="{DynamicResource Menu.Media}" Command="{Binding ShowMediaCommand}" />
+          <Separator />
+          <MenuItem Header="{DynamicResource Menu.Import}" />
+          <Separator />
+          <MenuItem Header="{DynamicResource Menu.Exit}" Click="OnExitClick" />
+        </MenuItem>
+        <MenuItem Header="{DynamicResource Menu.File}">
+          <MenuItem Header="{DynamicResource Menu.OpenFile}" />
+          <MenuItem Header="{DynamicResource Menu.OpenFolder}" />
+          <Separator />
+          <MenuItem Header="{DynamicResource Menu.Delete}" Command="{Binding DeleteCommand}" InputGesture="Delete" />
+        </MenuItem>
+        <MenuItem Header="{DynamicResource Menu.Downloads}">
+          <MenuItem Header="{DynamicResource Menu.Resume}" Command="{Binding ResumeCommand}" InputGesture="F5" />
+          <MenuItem Header="{DynamicResource Menu.Pause}" Command="{Binding PauseCommand}" InputGesture="F6" />
+          <MenuItem Header="{DynamicResource Menu.Stop}" Command="{Binding StopCommand}" InputGesture="F7" />
+          <Separator />
+          <MenuItem Header="{DynamicResource Menu.DeleteCompleted}" Command="{Binding ClearCompletedCommand}" />
+          <MenuItem Header="{DynamicResource Menu.SelectAll}" Command="{Binding SelectAllCommand}" InputGesture="Ctrl+A" />
+        </MenuItem>
+        <MenuItem Header="{DynamicResource Menu.View}">
+          <MenuItem Header="{DynamicResource Menu.DarkTheme}" Command="{Binding UseDarkThemeCommand}" />
+          <MenuItem Header="{DynamicResource Menu.LightTheme}" Command="{Binding UseLightThemeCommand}" />
+          <Separator />
+          <MenuItem Header="{DynamicResource Menu.Turkish}" Command="{Binding UseTurkishCommand}" />
+          <MenuItem Header="{DynamicResource Menu.English}" Command="{Binding UseEnglishCommand}" />
+        </MenuItem>
+        <MenuItem Header="{DynamicResource Menu.Help}">
+          <MenuItem Header="{DynamicResource Menu.Options}" Command="{Binding ShowOptionsCommand}" />
+          <MenuItem Header="{DynamicResource Menu.Scheduler}" Command="{Binding ShowSchedulerCommand}" />
+          <Separator />
+          <MenuItem Header="{DynamicResource Menu.About}" Command="{Binding ShowAboutCommand}" />
+        </MenuItem>
+      </Menu>
+
+      <!-- Large action toolbar -->
+      <Border Grid.Row="2"
+              Background="{DynamicResource Corr.Panel}"
+              BorderBrush="{DynamicResource Corr.Border}"
+              BorderThickness="0,1">
+        <Grid ColumnDefinitions="Auto,1,Auto,1,Auto,*,260" Margin="7,0">
+          <StackPanel Grid.Column="0" Orientation="Horizontal" Spacing="1">
+            <Button Classes="toolbar" Command="{Binding AddUrlCommand}"
+                    AutomationProperties.Name="{DynamicResource Toolbar.AddUrl}"
+                    ToolTip.Tip="{DynamicResource Toolbar.AddUrl}">
+              <StackPanel Spacing="4">
+                <PathIcon Data="{StaticResource Icon.Add}" Width="28" Height="28" Foreground="{DynamicResource Corr.Accent}" />
+                <TextBlock Text="{DynamicResource Toolbar.AddUrl}" FontSize="11" HorizontalAlignment="Center" />
+              </StackPanel>
+            </Button>
+            <Button Classes="toolbar" Command="{Binding ResumeCommand}"
+                    AutomationProperties.Name="{DynamicResource Toolbar.Resume}"
+                    ToolTip.Tip="{DynamicResource Toolbar.Resume}">
+              <StackPanel Spacing="4">
+                <PathIcon Data="{StaticResource Icon.Resume}" Width="28" Height="28" Foreground="{DynamicResource Corr.Blue}" />
+                <TextBlock Text="{DynamicResource Toolbar.Resume}" FontSize="11" HorizontalAlignment="Center" />
+              </StackPanel>
+            </Button>
+            <Button Classes="toolbar" Command="{Binding PauseCommand}"
+                    AutomationProperties.Name="{DynamicResource Toolbar.Pause}"
+                    ToolTip.Tip="{DynamicResource Toolbar.Pause}">
+              <StackPanel Spacing="4">
+                <PathIcon Data="{StaticResource Icon.Pause}" Width="27" Height="27" Foreground="{DynamicResource Corr.Warning}" />
+                <TextBlock Text="{DynamicResource Toolbar.Pause}" FontSize="11" HorizontalAlignment="Center" />
+              </StackPanel>
+            </Button>
+            <Button Classes="toolbar" Command="{Binding StopCommand}"
+                    AutomationProperties.Name="{DynamicResource Toolbar.Stop}"
+                    ToolTip.Tip="{DynamicResource Toolbar.Stop}">
+              <StackPanel Spacing="4">
+                <PathIcon Data="{StaticResource Icon.Stop}" Width="25" Height="25" Foreground="{DynamicResource Corr.TextSecondary}" />
+                <TextBlock Text="{DynamicResource Toolbar.Stop}" FontSize="11" HorizontalAlignment="Center" />
+              </StackPanel>
+            </Button>
+            <Button Classes="toolbar" Command="{Binding DeleteCommand}"
+                    AutomationProperties.Name="{DynamicResource Toolbar.Delete}"
+                    ToolTip.Tip="{DynamicResource Toolbar.Delete}">
+              <StackPanel Spacing="4">
+                <PathIcon Data="{StaticResource Icon.Delete}" Width="27" Height="27" Foreground="{DynamicResource Corr.Danger}" />
+                <TextBlock Text="{DynamicResource Toolbar.Delete}" FontSize="11" HorizontalAlignment="Center" />
+              </StackPanel>
+            </Button>
+          </StackPanel>
+
+          <Border Grid.Column="1" Background="{DynamicResource Corr.Border}" Width="1" Height="48" VerticalAlignment="Center" Margin="6,0" />
+
+          <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="1">
+            <Button Classes="toolbar" Command="{Binding ShowOptionsCommand}"
+                    AutomationProperties.Name="{DynamicResource Toolbar.Options}"
+                    ToolTip.Tip="{DynamicResource Toolbar.Options}">
+              <StackPanel Spacing="4">
+                <PathIcon Data="{StaticResource Icon.Settings}" Width="29" Height="29" Foreground="{DynamicResource Corr.Purple}" />
+                <TextBlock Text="{DynamicResource Toolbar.Options}" FontSize="11" HorizontalAlignment="Center" />
+              </StackPanel>
+            </Button>
+            <Button Classes="toolbar" Command="{Binding ShowSchedulerCommand}"
+                    AutomationProperties.Name="{DynamicResource Toolbar.Scheduler}"
+                    ToolTip.Tip="{DynamicResource Toolbar.Scheduler}">
+              <StackPanel Spacing="4">
+                <PathIcon Data="{StaticResource Icon.Schedule}" Width="28" Height="28" Foreground="{DynamicResource Corr.Warning}" />
+                <TextBlock Text="{DynamicResource Toolbar.Scheduler}" FontSize="11" HorizontalAlignment="Center" />
+              </StackPanel>
+            </Button>
+          </StackPanel>
+
+          <Border Grid.Column="3" Background="{DynamicResource Corr.Border}" Width="1" Height="48" VerticalAlignment="Center" Margin="6,0" />
+
+          <StackPanel Grid.Column="4" Orientation="Horizontal" Spacing="1">
+            <Button Classes="toolbar" Command="{Binding StartQueueCommand}"
+                    AutomationProperties.Name="{DynamicResource Toolbar.StartQueue}"
+                    ToolTip.Tip="{DynamicResource Toolbar.StartQueue}">
+              <StackPanel Spacing="4">
+                <PathIcon Data="{StaticResource Icon.QueueStart}" Width="28" Height="28" Foreground="{DynamicResource Corr.Success}" />
+                <TextBlock Text="{DynamicResource Toolbar.StartQueue}" FontSize="10.5" HorizontalAlignment="Center" TextTrimming="CharacterEllipsis" MaxWidth="70" />
+              </StackPanel>
+            </Button>
+            <Button Classes="toolbar" Command="{Binding StopQueueCommand}"
+                    AutomationProperties.Name="{DynamicResource Toolbar.StopQueue}"
+                    ToolTip.Tip="{DynamicResource Toolbar.StopQueue}">
+              <StackPanel Spacing="4">
+                <PathIcon Data="{StaticResource Icon.QueueStop}" Width="28" Height="28" Foreground="{DynamicResource Corr.TextSecondary}" />
+                <TextBlock Text="{DynamicResource Toolbar.StopQueue}" FontSize="10.5" HorizontalAlignment="Center" TextTrimming="CharacterEllipsis" MaxWidth="70" />
+              </StackPanel>
+            </Button>
+            <Button Classes="toolbar" Command="{Binding ShowMediaCommand}"
+                    AutomationProperties.Name="{DynamicResource Toolbar.Media}"
+                    ToolTip.Tip="{DynamicResource Toolbar.Media}">
+              <StackPanel Spacing="4">
+                <PathIcon Data="{StaticResource Icon.Media}" Width="29" Height="29" Foreground="{DynamicResource Corr.Blue}" />
+                <TextBlock Text="{DynamicResource Toolbar.Media}" FontSize="11" HorizontalAlignment="Center" />
+              </StackPanel>
+            </Button>
+          </StackPanel>
+
+          <Grid Grid.Column="6" Margin="8,0" VerticalAlignment="Center">
+            <TextBox Classes="searchBox"
+                     Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}"
+                     Watermark="{DynamicResource Search.Placeholder}"
+                     AutomationProperties.Name="{DynamicResource Search.Placeholder}" />
+            <PathIcon Data="{StaticResource Icon.Search}"
+                      Width="16"
+                      Height="16"
+                      Foreground="{DynamicResource Corr.TextMuted}"
+                      HorizontalAlignment="Left"
+                      Margin="11,0,0,0"
+                      IsHitTestVisible="False" />
+          </Grid>
+        </Grid>
+      </Border>
+
+      <!-- Category navigation and dense transfer table -->
+      <Grid Grid.Row="3" ColumnDefinitions="226,1,*">
+        <Border Grid.Column="0"
+                Background="{DynamicResource Corr.Panel}"
+                BorderBrush="{DynamicResource Corr.Border}"
+                BorderThickness="0,0,0,0">
+          <Grid RowDefinitions="41,*">
+            <Border BorderBrush="{DynamicResource Corr.Border}" BorderThickness="0,0,0,1" Padding="13,0">
+              <Grid ColumnDefinitions="*,Auto">
+                <TextBlock Text="{DynamicResource Sidebar.Categories}"
+                           Classes="eyebrow"
+                           VerticalAlignment="Center" />
+                <Border Grid.Column="1"
+                        Width="23"
+                        Height="23"
+                        CornerRadius="6"
+                        Background="{DynamicResource Corr.AccentMuted}"
+                        VerticalAlignment="Center">
+                  <PathIcon Data="{StaticResource Icon.Folder}"
+                            Width="13"
+                            Height="13"
+                            Foreground="{DynamicResource Corr.Accent}" />
+                </Border>
+              </Grid>
+            </Border>
+
+            <TreeView Grid.Row="1"
+                      Classes="categoryTree"
+                      ItemsSource="{Binding Categories}"
+                      SelectedItem="{Binding SelectedCategory}"
+                      Margin="6,8"
+                      AutomationProperties.Name="{DynamicResource Sidebar.Categories}">
+              <TreeView.ItemTemplate>
+                <TreeDataTemplate DataType="models:CategoryNode" ItemsSource="{Binding Children}">
+                  <Grid ColumnDefinitions="22,*,Auto" Height="29" MinWidth="155">
+                    <PathIcon Data="{StaticResource Icon.Folder}"
+                              Width="14"
+                              Height="14"
+                              Foreground="{DynamicResource Corr.Accent}"
+                              VerticalAlignment="Center" />
+                    <TextBlock Grid.Column="1"
+                               Text="{Binding DisplayName}"
+                               VerticalAlignment="Center"
+                               TextTrimming="CharacterEllipsis"
+                               FontSize="12" />
+                    <Border Grid.Column="2"
+                            Background="{DynamicResource Corr.PanelRaised}"
+                            CornerRadius="8"
+                            Padding="6,1"
+                            Margin="6,0,2,0"
+                            VerticalAlignment="Center">
+                      <TextBlock Text="{Binding Count}" Classes="muted" FontSize="10" />
+                    </Border>
+                  </Grid>
+                </TreeDataTemplate>
+              </TreeView.ItemTemplate>
+            </TreeView>
+          </Grid>
+        </Border>
+
+        <Border Grid.Column="1" Background="{DynamicResource Corr.Border}" />
+
+        <Grid Grid.Column="2">
+          <DataGrid Classes="downloadGrid"
+                    ItemsSource="{Binding Downloads}"
+                    SelectedItem="{Binding SelectedDownload}"
+                    SelectionMode="Extended"
+                    DoubleTapped="OnDownloadListDoubleTapped"
+                    AutoGenerateColumns="False"
+                    IsReadOnly="True"
+                    CanUserReorderColumns="True"
+                    CanUserResizeColumns="True"
+                    CanUserSortColumns="True"
+                    HeadersVisibility="Column"
+                    RowHeight="34"
+                    ColumnHeaderHeight="32"
+                    AutomationProperties.Name="{DynamicResource Category.All}">
+            <DataGrid.ContextMenu>
+              <ContextMenu>
+                <MenuItem Header="{DynamicResource Menu.OpenFolder}" Command="{Binding OpenFolderCommand}" />
+                <MenuItem Header="{DynamicResource Menu.OpenFile}" Command="{Binding OpenFileCommand}" />
+                <MenuItem Header="{DynamicResource Menu.ShowInExplorer}" Command="{Binding OpenFolderCommand}" />
+                <Separator />
+                <MenuItem Header="{DynamicResource Menu.Resume}" Command="{Binding ResumeCommand}" />
+                <MenuItem Header="{DynamicResource Menu.Pause}" Command="{Binding PauseCommand}" />
+                <MenuItem Header="{DynamicResource Menu.Stop}" Command="{Binding StopCommand}" />
+                <Separator />
+                <MenuItem Header="{DynamicResource Menu.Delete}" Command="{Binding DeleteCommand}" />
+              </ContextMenu>
+            </DataGrid.ContextMenu>
+            <DataGrid.Columns>
+              <DataGridTemplateColumn Header="{DynamicResource Column.Name}" Width="2*" MinWidth="220">
+                <DataGridTemplateColumn.CellTemplate>
+                  <DataTemplate x:DataType="models:DownloadListItem">
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                      <Border Width="20" Height="20" CornerRadius="5" Background="{DynamicResource Corr.AccentMuted}">
+                        <PathIcon Data="{StaticResource Icon.Download}" Width="12" Height="12" Foreground="{DynamicResource Corr.Accent}" />
+                      </Border>
+                      <TextBlock Text="{Binding FileName}" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" />
+                    </StackPanel>
+                  </DataTemplate>
+                </DataGridTemplateColumn.CellTemplate>
+              </DataGridTemplateColumn>
+              <DataGridTextColumn Header="{DynamicResource Column.Category}" Binding="{Binding Category}" Width="105" />
+              <DataGridTextColumn Header="{DynamicResource Column.Size}" Binding="{Binding Size}" Width="92" />
+              <DataGridTextColumn Header="{DynamicResource Column.Status}" Binding="{Binding Status}" Width="110" />
+              <DataGridTemplateColumn Header="{DynamicResource Column.Progress}" Width="130">
+                <DataGridTemplateColumn.CellTemplate>
+                  <DataTemplate x:DataType="models:DownloadListItem">
+                    <Grid>
+                      <ProgressBar Value="{Binding Progress}" Minimum="0" Maximum="100" Height="6" VerticalAlignment="Center" />
+                      <TextBlock Text="{Binding ProgressText}" FontSize="10" HorizontalAlignment="Right" Margin="0,0,2,14" />
+                    </Grid>
+                  </DataTemplate>
+                </DataGridTemplateColumn.CellTemplate>
+              </DataGridTemplateColumn>
+              <DataGridTextColumn Header="{DynamicResource Column.Remaining}" Binding="{Binding Remaining}" Width="96" />
+              <DataGridTextColumn Header="{DynamicResource Column.Speed}" Binding="{Binding Speed}" Width="110" />
+              <DataGridTextColumn Header="{DynamicResource Column.Added}" Binding="{Binding Added}" Width="90" />
+              <DataGridTextColumn Header="{DynamicResource Column.Description}" Binding="{Binding Description}" Width="*" MinWidth="130" />
+            </DataGrid.Columns>
+          </DataGrid>
+
+          <Border IsVisible="{Binding IsDownloadListEmpty}"
+                  Background="{DynamicResource Corr.Panel}"
+                  Margin="0,33,0,0">
+            <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Width="420" Spacing="10">
+              <Border Width="74" Height="74" CornerRadius="22" Background="{DynamicResource Corr.AccentMuted}" Margin="0,0,0,8">
+                <PathIcon Data="{StaticResource Icon.Download}"
+                          Width="35"
+                          Height="35"
+                          Foreground="{DynamicResource Corr.Accent}" />
+              </Border>
+              <TextBlock Text="{DynamicResource List.EmptyTitle}"
+                         FontSize="21"
+                         FontWeight="SemiBold"
+                         HorizontalAlignment="Center" />
+              <TextBlock Text="{DynamicResource List.EmptyBody}"
+                         Classes="muted"
+                         TextAlignment="Center"
+                         TextWrapping="Wrap"
+                         LineHeight="20" />
+              <Button Classes="accent"
+                      Content="{DynamicResource List.EmptyAction}"
+                      Command="{Binding AddUrlCommand}"
+                      HorizontalAlignment="Center"
+                      Margin="0,8,0,0" />
+              <TextBlock Text="Ctrl + U" Classes="muted" FontSize="11" HorizontalAlignment="Center" />
+            </StackPanel>
+          </Border>
+        </Grid>
+      </Grid>
+
+      <!-- Status and speed strip -->
+      <Border Grid.Row="4"
+              Background="{DynamicResource Corr.TitleBackground}"
+              BorderBrush="{DynamicResource Corr.Border}"
+              BorderThickness="0,1,0,0">
+        <Grid ColumnDefinitions="*,Auto,Auto,Auto,Auto" Margin="11,0">
+          <TextBlock Text="{Binding StatusMessage}"
+                     Classes="muted"
+                     FontSize="11"
+                     VerticalAlignment="Center"
+                     TextTrimming="CharacterEllipsis" />
+          <TextBlock Grid.Column="1" Text="{Binding TotalCountText}" Classes="muted" FontSize="11" VerticalAlignment="Center" Margin="12,0" />
+          <TextBlock Grid.Column="2" Text="{Binding ActiveCountText}" Classes="muted" FontSize="11" VerticalAlignment="Center" Margin="12,0" />
+          <TextBlock Grid.Column="3" Text="{Binding AggregateSpeedText}" Foreground="{DynamicResource Corr.Accent}" FontSize="11" FontWeight="SemiBold" VerticalAlignment="Center" Margin="12,0" />
+          <StackPanel Grid.Column="4" Orientation="Horizontal" Spacing="7" Margin="12,0,2,0" VerticalAlignment="Center">
+            <Ellipse Width="7" Height="7" Fill="{DynamicResource Corr.Success}" />
+            <TextBlock Text="{Binding BrowserCaptureStatus}" Classes="muted" FontSize="11" VerticalAlignment="Center" />
+          </StackPanel>
+        </Grid>
+      </Border>
+    </Grid>
+  </Border>
+</Window>
