@@ -50,6 +50,11 @@ Invoke-Checked "SBOM generation" {
 }
 & (Join-Path $PSScriptRoot "check-licenses.ps1")
 
+# Self-contained publish needs RID-specific assets; regenerate the lock file
+# for win-x64 here. The repository lock files are restored to their RID-less
+# state afterwards by the release operator (git checkout).
+Invoke-Checked "rid restore" { dotnet restore Correntra.sln -r $runtime --force-evaluate }
+
 if (-not $SkipTests) {
     Invoke-Checked "dotnet tests" { dotnet test Correntra.sln -c Release --no-restore }
     if (Get-Command npm -ErrorAction SilentlyContinue) {
@@ -110,7 +115,7 @@ $ffmpegRoot = Join-Path $vendorRoot "ffmpeg-n8.1-latest-win64-lgpl-shared-8.1"
 if (-not $SkipFfmpegDownload -or -not (Test-Path -LiteralPath (Join-Path $ffmpegRoot "bin\ffmpeg.exe"))) {
     $resolvedFfmpeg = & (Join-Path $PSScriptRoot "get-ffmpeg.ps1")
     if ($resolvedFfmpeg) {
-        $ffmpegRoot = [IO.Path]::GetFullPath($resolvedFfmpeg[-1])
+        $ffmpegRoot = [IO.Path]::GetFullPath(@($resolvedFfmpeg)[-1])
     }
 }
 
@@ -128,7 +133,7 @@ Copy-Item -LiteralPath (Join-Path $repositoryRoot "packaging\FFMPEG-NOTICE.md") 
 try {
     $resolvedYtDlp = & (Join-Path $PSScriptRoot "get-yt-dlp.ps1")
     if ($resolvedYtDlp) {
-        Copy-Item -LiteralPath ([IO.Path]::GetFullPath($resolvedYtDlp[-1])) -Destination (Join-Path $applicationRoot "yt-dlp.exe") -Force
+        Copy-Item -LiteralPath ([IO.Path]::GetFullPath(@($resolvedYtDlp)[-1])) -Destination (Join-Path $applicationRoot "yt-dlp.exe") -Force
     }
 }
 catch {
@@ -188,7 +193,7 @@ $hashLines = foreach ($file in $releaseFiles) {
     $hash = (Get-FileHash -LiteralPath $file.FullName -Algorithm SHA256).Hash.ToLowerInvariant()
     "$hash  $($file.Name)"
 }
-Set-Content -LiteralPath $hashFile -Value $hashLines -Encoding utf8NoBOM
+Set-Content -LiteralPath $hashFile -Value $hashLines -Encoding ascii
 
 Write-Host "Release artifacts created in $releaseRoot"
 Get-ChildItem -LiteralPath $releaseRoot -File | Sort-Object Name | Select-Object Name, Length

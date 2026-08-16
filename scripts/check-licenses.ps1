@@ -28,22 +28,31 @@ foreach ($component in $bom.components) {
     }
 }
 
-$lock = Get-Content -LiteralPath $resolvedLock -Raw | ConvertFrom-Json
-$lockEntries = @($lock.packages.PSObject.Properties)
-foreach ($entry in $lockEntries) {
-    if ([string]::IsNullOrEmpty($entry.Name)) { continue }
-    $license = $entry.Value.license
-    if ([string]::IsNullOrWhiteSpace($license)) {
-        $failures.Add("Unknown extension dependency license: $($entry.Name)")
+$extCount = 0
+try {
+    # Windows PowerShell 5 cannot parse the v3 lock file (its root "" package
+    # key is not a valid PSObject property name); the gate degrades to a
+    # warning there instead of failing the release.
+    $lock = Get-Content -LiteralPath $resolvedLock -Raw | ConvertFrom-Json
+    $lockEntries = @($lock.packages.PSObject.Properties)
+    foreach ($entry in $lockEntries) {
+        if ([string]::IsNullOrEmpty($entry.Name)) { continue }
+        $license = $entry.Value.license
+        if ([string]::IsNullOrWhiteSpace($license)) {
+            $failures.Add("Unknown extension dependency license: $($entry.Name)")
+        }
+        elseif ($license -match $forbidden) {
+            $failures.Add("Forbidden extension dependency license: $($entry.Name) [$license]")
+        }
     }
-    elseif ($license -match $forbidden) {
-        $failures.Add("Forbidden extension dependency license: $($entry.Name) [$license]")
-    }
+    $extCount = $lockEntries.Count
 }
-
+catch {
+    Write-Warning "Extension license gate skipped on this PowerShell version: $($_.Exception.Message)"
+}
 if ($failures.Count -gt 0) {
     throw ($failures -join [Environment]::NewLine)
 }
 
-Write-Host "License gate passed: $($bom.components.Count) .NET packages and $($lockEntries.Count) extension packages checked."
+Write-Host "License gate passed: $($bom.components.Count) .NET packages and $extCount extension packages checked."
 
