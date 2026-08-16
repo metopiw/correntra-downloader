@@ -28,15 +28,16 @@ foreach ($component in $bom.components) {
     }
 }
 
-$lock = Get-Content -LiteralPath $resolvedLock -Raw | ConvertFrom-Json -AsHashtable
-foreach ($entry in $lock.packages.GetEnumerator()) {
-    if ([string]::IsNullOrEmpty($entry.Key)) { continue }
+$lock = Get-Content -LiteralPath $resolvedLock -Raw | ConvertFrom-Json
+$lockEntries = @($lock.packages.PSObject.Properties)
+foreach ($entry in $lockEntries) {
+    if ([string]::IsNullOrEmpty($entry.Name)) { continue }
     $license = $entry.Value.license
     if ([string]::IsNullOrWhiteSpace($license)) {
-        $failures.Add("Unknown extension dependency license: $($entry.Key)")
+        $failures.Add("Unknown extension dependency license: $($entry.Name)")
     }
     elseif ($license -match $forbidden) {
-        $failures.Add("Forbidden extension dependency license: $($entry.Key) [$license]")
+        $failures.Add("Forbidden extension dependency license: $($entry.Name) [$license]")
     }
 }
 
@@ -44,5 +45,5 @@ if ($failures.Count -gt 0) {
     throw ($failures -join [Environment]::NewLine)
 }
 
-Write-Host "License gate passed: $($bom.components.Count) .NET packages and $($lock.packages.Count - 1) extension packages checked."
+Write-Host "License gate passed: $($bom.components.Count) .NET packages and $($lockEntries.Count) extension packages checked."
 
