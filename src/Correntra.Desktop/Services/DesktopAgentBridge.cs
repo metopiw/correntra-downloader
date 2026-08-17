@@ -10,7 +10,6 @@ using Correntra.Desktop.Models;
 using Correntra.Desktop.ViewModels;
 using Correntra.Desktop.Views;
 using Correntra.Infrastructure.Ipc;
-using Correntra.Platform.Windows.Browser;
 
 namespace Correntra.Desktop.Services;
 
@@ -193,7 +192,6 @@ public sealed class DesktopAgentBridge : IAsyncDisposable
             await Task.Run(
                 () =>
                 {
-                    TryRegisterNativeHost();
                     EnsureAgentProcess();
                 },
                 shutdown.Token).ConfigureAwait(false);
@@ -566,28 +564,6 @@ public sealed class DesktopAgentBridge : IAsyncDisposable
         catch (Exception exception) when (exception is InvalidOperationException or Win32Exception or UnauthorizedAccessException)
         {
             Trace.WriteLine($"Correntra Agent could not be started: {exception.Message}");
-        }
-    }
-
-    private static void TryRegisterNativeHost()
-    {
-        string hostPath = Path.Combine(AppContext.BaseDirectory, "Correntra.NativeHost.exe");
-        if (!File.Exists(hostPath) || !OperatingSystem.IsWindows())
-        {
-            return;
-        }
-
-        try
-        {
-            string manifestDirectory = Path.Combine(
-                Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-                "Correntra",
-                "Browser");
-            NativeMessagingRegistrar.RegisterDefault(hostPath, manifestDirectory);
-        }
-        catch (Exception exception) when (exception is IOException or UnauthorizedAccessException or SecurityException)
-        {
-            Trace.WriteLine($"Native Messaging registration was skipped: {exception.Message}");
         }
     }
 

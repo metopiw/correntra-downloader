@@ -18,10 +18,6 @@ tmp/
 *.crx
 *.part
 *.correntra.json
-browser-extension/dist/
-browser-extension/node_modules/
-browser-extension/public/
-browser-extension-backup/
 src/Correntra.Desktop/Assets/avalonia-logo.ico
 
 # Local runtime state

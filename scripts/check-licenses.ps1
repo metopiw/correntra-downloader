@@ -29,6 +29,7 @@ foreach ($component in $bom.components) {
 }
 
 $extCount = 0
+if (Test-Path -LiteralPath $resolvedLock) {
 try {
     # Windows PowerShell 5 cannot parse the v3 lock file (its root "" package
     # key is not a valid PSObject property name); the gate degrades to a
@@ -49,6 +50,7 @@ try {
 }
 catch {
     Write-Warning "Extension license gate skipped on this PowerShell version: $($_.Exception.Message)"
+}
 }
 if ($failures.Count -gt 0) {
     throw ($failures -join [Environment]::NewLine)

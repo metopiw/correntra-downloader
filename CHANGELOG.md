@@ -2,6 +2,20 @@
 
 All notable changes to Correntra Downloader are recorded here. Dates are UTC.
 
+## 0.2.1 — 2026-08-18
+
+### Removed
+- **Bundled browser extensions deleted** (`browser-extension/`,
+  `browser-extension-v2/`, backups) together with their build/test/release
+  wiring and the Native Messaging auto-registration. The product is now a
+  standalone desktop app.
+
+### Changed
+- The agent's loopback HTTP bridge (`http://127.0.0.1:27410/`: `/ping`,
+  `/jobs`, `/takeover`, `/confirm`) is the single documented seam for any
+  future browser extension; `AGENTS.md` and `README.md` describe it and ban
+  native messaging for new integrations.
+
 ## 0.2.0 — 2026-08-16
 
 ### Added

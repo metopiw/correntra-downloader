@@ -4,8 +4,10 @@
 
 Correntra Downloader is a serious Windows 10/11 download manager for regular
 files and unprotected web media. It combines resumable segmented transfers,
-queues and scheduling, Chrome/Edge integration, HLS/DASH handling, and an
-IDM-inspired—but original—desktop workflow.
+queues and scheduling, HLS/DASH handling, and an IDM-inspired—but original—
+desktop workflow. Browser integration is intentionally not bundled: the agent
+exposes a loopback HTTP bridge (`http://127.0.0.1:27410/`) that any future
+extension can use (see `AGENTS.md`).
 
 The application is being developed independently. GPL/AGPL/SSPL code is not
 part of the product, and `yt-dlp.exe` is not bundled. DRM circumvention is not
@@ -22,7 +24,6 @@ Prerequisites:
 
 - Windows 10 or 11, x64
 - .NET SDK 8.0.404 or a compatible 8.0 patch
-- Node.js 22+ for the browser extension
 
 Run from source:
 
@@ -38,8 +39,10 @@ dotnet build Correntra.sln -c Release --no-restore
 dotnet test Correntra.sln -c Release --no-build
 ```
 
-The extension is loaded from `browser-extension/dist` using Chrome or Edge
-Developer Mode. The desktop app registers its per-user Native Messaging host.
+No browser extension ships with the product. The agent listens on
+`http://127.0.0.1:27410/` (`GET /ping`, `GET /jobs`, `POST /takeover`,
+`POST /confirm`) so a separately developed extension can hand downloads to
+the app without native messaging.
 
 ## Responsible use
 

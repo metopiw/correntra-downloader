@@ -12,27 +12,6 @@ if (-not $SkipBuild) {
     dotnet build Correntra.sln -c Debug --no-restore
     if ($LASTEXITCODE -ne 0) { throw "dotnet build failed." }
 
-    $npm = Get-Command npm -ErrorAction SilentlyContinue
-    $extensionBuilt = Test-Path (Join-Path $repositoryRoot "browser-extension\dist\manifest.json")
-    if ($npm) {
-        Push-Location browser-extension
-        try {
-            npm ci
-            if ($LASTEXITCODE -ne 0) { throw "npm ci failed." }
-            npm run build
-            if ($LASTEXITCODE -ne 0) { throw "Browser extension build failed." }
-        }
-        finally {
-            Pop-Location
-        }
-    }
-    elseif ($extensionBuilt) {
-        Write-Warning "npm bulunamadi; mevcut browser-extension/dist kullanilacak."
-    }
-    else {
-        throw "npm bulunamadi ve browser-extension/dist mevcut degil. Node.js kurun veya extension'i elle derleyin."
-    }
-
     # Social video engine (yt-dlp): download once into artifacts/vendor, then
     # copy next to the agent/desktop binaries. Failure only disables the
     # social-site extractor; normal downloads keep working.
@@ -79,9 +58,6 @@ if (-not $SkipBuild) {
 
 $agent = Join-Path $repositoryRoot "src\Correntra.Agent\bin\Debug\net8.0-windows10.0.17763.0\Correntra.Agent.exe"
 $desktop = Join-Path $repositoryRoot "src\Correntra.Desktop\bin\Debug\net8.0-windows10.0.17763.0\Correntra.exe"
-
-& (Join-Path $repositoryRoot "scripts\register-native-host.ps1")
-if ($LASTEXITCODE -ne 0) { throw "Native Messaging host registration failed." }
 
 if (-not (Get-Process -Name "Correntra.Agent" -ErrorAction SilentlyContinue)) {
     Start-Process -FilePath $agent -WindowStyle Hidden

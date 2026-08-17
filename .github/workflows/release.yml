@@ -19,11 +19,6 @@ jobs:
       - uses: actions/setup-dotnet@v4
         with:
           dotnet-version: 8.0.404
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 22
-          cache: npm
-          cache-dependency-path: browser-extension/package-lock.json
       - name: Build and verify release
         shell: pwsh
         run: ./scripts/release.ps1 -Version '${{ inputs.version }}'

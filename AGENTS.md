@@ -2,30 +2,27 @@
 
 Correntra is an IDM-class download manager: Avalonia desktop shell
 (`src/Correntra.Desktop`), a background transfer agent
-(`src/Correntra.Agent`), a Chrome/Edge capture extension
-(`browser-extension/`), a native messaging host (`src/Correntra.NativeHost`),
-a segmented HTTP engine (`src/Correntra.Transfer`), media/HLS/DASH handling
-(`src/Correntra.Media`) and social-site extraction via a bundled **yt-dlp**
-sidecar (`src/Correntra.Agent/Runtime/YtDlpExecutor.cs`).
+(`src/Correntra.Agent`), a segmented HTTP engine (`src/Correntra.Transfer`),
+media/HLS/DASH handling (`src/Correntra.Media`) and social-site extraction
+via a bundled **yt-dlp** sidecar (`src/Correntra.Agent/Runtime/YtDlpExecutor.cs`).
+No browser extension ships with this repository; browser integration is an
+external concern that talks to the agent over the loopback HTTP bridge.
 
 ## Build / test / run
 
 - .NET 8 SDK. `dotnet build Correntra.sln -c Debug`,
   `dotnet test Correntra.sln -c Debug --no-build`.
-- Legacy v1 extension (`browser-extension/`, TypeScript + esbuild) is kept for
-  rollback only (`browser-extension-backup/`); it needs `npm run build`.
-- **v2 extension (the one to ship)**: `browser-extension-v2/` is build-free
-  plain JS (manifest + background.js + popup.*). Chrome loads the folder
-  directly; there is nothing to compile. It only performs browser-download
-  takeover; video capture was removed by user decision.
-- **Extension ↔ agent transport is the loopback HTTP bridge**, not native
-  messaging: the agent serves `http://127.0.0.1:27410/` (`/takeover`,
-  `/confirm`, `/jobs`, `/ping`) from `AgentLocalHttpServer`. Test it with
-  `scripts/test-bridge.ps1` (or curl). Never reintroduce native messaging for
-  extension flows; it proved untestable and fragile on this machine.
+- **Browser integration seam (for future extensions)**: the agent serves a
+  loopback-only HTTP bridge at `http://127.0.0.1:27410/` from
+  `AgentLocalHttpServer`: `GET /ping`, `GET /jobs`, `POST /takeover`,
+  `POST /confirm`. An extension only needs the `downloads` permission and a
+  host permission for that origin; it POSTs the same takeover payload the old
+  extension used. Test the bridge with `scripts/test-bridge.ps1` (or curl).
+  **Never reintroduce Chrome native messaging** for this: it proved
+  untestable from the agent side and fragile on this machine (manifest
+  allowed_origins, extension IDs, silent failures).
 - Full dev launch: `baslat.bat` → `scripts/dev-start.ps1` (builds solution,
-  builds the legacy extension when npm exists, deploys `yt-dlp.exe`/ffmpeg
-  into both bin outputs, starts agent + desktop).
+  deploys `yt-dlp.exe`/ffmpeg into both bin outputs, starts agent + desktop).
 - Social/video URLs are supported through the desktop app: Add URL with a
   YouTube/Facebook/… link and the agent routes the job through yt-dlp
   (`YtDlpExecutor`), merging tracks with the bundled FFmpeg sidecar.
@@ -78,8 +75,7 @@ sidecar (`src/Correntra.Agent/Runtime/YtDlpExecutor.cs`).
 ## Definition of done
 
 1. `dotnet build` clean (0 warnings) and all test projects green.
-2. v2 extension: `node --check` on its JS files (no build step).
-3. **CLI end-to-end download test**: with the agent running, run
+2. **CLI end-to-end download test**: with the agent running, run
    `scripts/test-bridge.ps1` — it posts a takeover over the loopback bridge,
    confirms it and polls `/jobs` until terminal. A generic `download` name
    must come back renamed (e.g. `yt-dlp.exe`) and state must reach 9

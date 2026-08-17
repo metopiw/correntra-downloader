@@ -57,32 +57,6 @@ Invoke-Checked "rid restore" { dotnet restore Correntra.sln -r $runtime --force-
 
 if (-not $SkipTests) {
     Invoke-Checked "dotnet tests" { dotnet test Correntra.sln -c Release --no-restore }
-    if (Get-Command npm -ErrorAction SilentlyContinue) {
-        Push-Location browser-extension
-        try {
-            Invoke-Checked "extension dependency restore" { npm ci }
-            Invoke-Checked "extension tests" { npm test }
-        }
-        finally {
-            Pop-Location
-        }
-    }
-    else {
-        Write-Warning "npm not found; skipping legacy extension tests."
-    }
-}
-
-if (Get-Command npm -ErrorAction SilentlyContinue) {
-    Push-Location browser-extension
-    try {
-        Invoke-Checked "extension build" { npm run build }
-    }
-    finally {
-        Pop-Location
-    }
-}
-elseif (-not (Test-Path (Join-Path $repositoryRoot "browser-extension\dist\manifest.json"))) {
-    throw "npm not found and the legacy extension dist is missing."
 }
 
 $publishArguments = @(
@@ -103,12 +77,6 @@ Invoke-Checked "desktop publish" {
 Invoke-Checked "agent publish" {
     dotnet publish "src/Correntra.Agent/Correntra.Agent.csproj" @publishArguments
 }
-Invoke-Checked "native host publish" {
-    dotnet publish "src/Correntra.NativeHost/Correntra.NativeHost.csproj" @publishArguments
-}
-
-$extensionTarget = Join-Path $applicationRoot "browser-extension"
-Copy-Item -LiteralPath (Join-Path $repositoryRoot "browser-extension\dist") -Destination $extensionTarget -Recurse -Force
 
 $vendorRoot = Join-Path $repositoryRoot "artifacts\vendor"
 $ffmpegRoot = Join-Path $vendorRoot "ffmpeg-n8.1-latest-win64-lgpl-shared-8.1"
@@ -146,15 +114,11 @@ Copy-Item -LiteralPath (Join-Path $repositoryRoot "artifacts\sbom\bom.json") -De
 Copy-Item -LiteralPath (Join-Path $repositoryRoot "packaging\UZANTI-KURULUMU.txt") -Destination $applicationRoot -Force
 
 $portablePath = Join-Path $releaseRoot "Correntra-Downloader-$Version-win-x64-portable.zip"
-$extensionPath = Join-Path $releaseRoot "Correntra-Browser-Extension-$Version.zip"
 $sbomPath = Join-Path $releaseRoot "Correntra-Downloader-$Version-sbom.cdx.json"
-foreach ($archive in $portablePath, $extensionPath) {
-    if (Test-Path -LiteralPath $archive) {
-        Remove-Item -LiteralPath $archive -Force
-    }
+if (Test-Path -LiteralPath $portablePath) {
+    Remove-Item -LiteralPath $portablePath -Force
 }
 Compress-Archive -Path (Join-Path $applicationRoot "*") -DestinationPath $portablePath -CompressionLevel Optimal
-Compress-Archive -Path (Join-Path $repositoryRoot "browser-extension-v2\*") -DestinationPath $extensionPath -CompressionLevel Optimal
 Copy-Item -LiteralPath (Join-Path $repositoryRoot "artifacts\sbom\bom.json") -Destination $sbomPath -Force
 
 $releaseNotesPath = Join-Path $repositoryRoot "packaging\RELEASE-NOTES-$Version.md"
