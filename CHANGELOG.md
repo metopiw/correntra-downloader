@@ -2,6 +2,21 @@
 
 All notable changes to Correntra Downloader are recorded here. Dates are UTC.
 
+## 0.3.7 — 2026-08-22
+
+### Fixed
+- **Quality listing was slow (~10 s) on YouTube**: the cookie chain probed
+  chrome → edge → firefox → anonymous sequentially, so every capture waited
+  on each probe (locked profiles fail in ~1 s each). All four sources are
+  now raced in parallel and the first success wins — YouTube quality lists
+  drop from ~11 s to ~5 s (measured).
+- **Instagram reels showed "Kalite bulunamadı" instead of the real reason**:
+  Instagram now rejects anonymous metadata requests ("empty media response")
+  and requires login cookies; when every cookie source fails the manifest
+  fallback returned an empty list that read as "no qualities". This needs a
+  signed-in browser profile: fully close Chrome (so Correntra can read its
+  cookies), or sign in to instagram.com in Edge/Firefox.
+
 ## 0.3.6 — 2026-08-22
 
 ### Fixed

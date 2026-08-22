@@ -252,56 +252,62 @@ public sealed partial class YtDlpExecutor
     }
 
     /// <summary>
-    /// Probes metadata once per cookie source. A locked or missing browser
-    /// profile fails in about a second and moves the chain forward; only the
-    /// final anonymous failure propagates to the caller. TikTok's
-    /// "Unable to extract universal data" is a transient JS challenge — retry
-    /// the whole chain once after a short delay.
+    /// Probes metadata across all cookie sources IN PARALLEL and returns the
+    /// first success (locked/missing profiles fail in ~1 s, so racing costs
+    /// nothing and cuts the sequential ~10 s chain to the single slowest
+    /// probe). A transient JS challenge (TikTok "universal data") retries the
+    /// whole race once after a short delay.
     /// </summary>
     private static async Task<string> CaptureWithCookieChainAsync(
         string executable,
         string url,
         CancellationToken cancellationToken)
     {
+        Exception? lastError = null;
         for (int attempt = 0; attempt < 2; attempt++)
         {
+            var probes = new List<Task<string>>();
             foreach (string browser in CookieBrowserChain)
             {
+                probes.Add(RunCaptureAsync(
+                    executable,
+                    BuildEnumerateArguments(url, cookieBrowser: browser),
+                    cancellationToken));
+            }
+            // Anonymous pass races too — it is the only source when every
+            // browser profile is locked or lacks a session.
+            probes.Add(RunCaptureAsync(
+                executable,
+                BuildEnumerateArguments(url, cookieBrowser: null),
+                cancellationToken));
+
+            while (probes.Count > 0)
+            {
+                Task<string> done = await Task.WhenAny(probes).ConfigureAwait(false);
+                probes.Remove(done);
                 try
                 {
-                    return await RunCaptureAsync(
-                        executable,
-                        BuildEnumerateArguments(url, cookieBrowser: browser),
-                        cancellationToken).ConfigureAwait(false);
+                    return await done.ConfigureAwait(false);
                 }
-                catch (InvalidOperationException)
+                catch (InvalidOperationException ex)
                 {
-                    // Cookie extraction failed (browser running/missing); the
-                    // next source or the anonymous pass takes over.
+                    lastError = ex;
                 }
             }
 
-            try
-            {
-                return await RunCaptureAsync(
-                    executable,
-                    BuildEnumerateArguments(url, cookieBrowser: null),
-                    cancellationToken).ConfigureAwait(false);
-            }
-            catch (InvalidOperationException ex) when (IsTransientChallenge(ex) && attempt == 0)
+            if (lastError is not null &&
+                IsTransientChallenge(lastError) &&
+                attempt == 0 &&
+                !cancellationToken.IsCancellationRequested)
             {
                 await Task.Delay(1200, cancellationToken).ConfigureAwait(false);
             }
         }
 
-        // Should have returned or thrown by now; re-throw with the last error.
-        return await RunCaptureAsync(
-            executable,
-            BuildEnumerateArguments(url, cookieBrowser: null),
-            cancellationToken).ConfigureAwait(false);
+        throw lastError ?? new InvalidOperationException("yt-dlp could not read this media.");
     }
 
-    private static bool IsTransientChallenge(InvalidOperationException ex) =>
+    private static bool IsTransientChallenge(Exception ex) =>
         ex.Message.Contains("Unable to extract universal data", StringComparison.OrdinalIgnoreCase) ||
         ex.Message.Contains("Solving JS challenge", StringComparison.OrdinalIgnoreCase);
 
