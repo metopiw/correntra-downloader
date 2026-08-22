@@ -48,13 +48,26 @@ Browser integration is the unpacked Manifest V3 extension in
 - Downloads persist in SQLite; progress checkpoints are per-destination
   `*.correntra.part.checkpoint.json` files. Resume correctness depends on
   `CanResume` validators (ETag/Last-Modified) — keep them strict.
+- **Transfer engine**: segmented HTTP (`src/Correntra.Transfer`) defaults to
+  **8 segments** (IDM default, 1..32) with 256 KiB buffers, HTTP/2
+  multiplexing and checkpoint throttling. `DownloadJobCoordinator` reads
+  `desktop-settings.json:SegmentsPerDownload` so the Settings slider actually
+  applies; 32 segments triggers `429` on many hosts (ash-speed: 1 seg 3.46
+  MB/s vs 32 seg 1.12 MB/s).
 - Social-platform and other extractor URLs (see `YtDlpExecutor`) must go
   through yt-dlp; plain HTTP fetches of those pages only save HTML. Jobs
   whose source host is a known platform, or that carry `X-Correntra-Format`,
   are routed in `DownloadJobCoordinator`; the selected quality is never sent
   to any media server.
-- yt-dlp runs with `--cookies-from-browser chrome` first and falls back to an
-  anonymous pass; FFmpeg is located via `--ffmpeg-location`.
+- yt-dlp runs with `--cookies-from-browser chrome → edge → firefox` then
+  falls back to an anonymous pass (Chrome locks its cookie DB while running,
+  yt-dlp #7271); FFmpeg is located via `--ffmpeg-location`.
+- **Browser → Agent bridge is dual-layer** after 0.3.4: (1) content-script
+  click interceptor for obvious file links (`.bin/.zip/.exe/[download]`) via
+  `correntra.takeoverUrl` before a `DownloadItem` exists, and (2) hardened
+  `chrome.downloads.onCreated` + `onDeterminingFilename` that **pauses first**
+  (IDM-style) and keeps the MV3 worker alive with `alarms`. Never reintroduce
+  native messaging.
 
 ## Licensing gates
 
@@ -81,5 +94,11 @@ Browser integration is the unpacked Manifest V3 extension in
    confirms it and polls `/jobs` until terminal. A generic `download` name
    must come back renamed (e.g. `yt-dlp.exe`) and state must reach 9
    (Completed).
-4. Update `CHANGELOG.md` (and `THIRD-PARTY-NOTICES.md` for new components).
-5. Restart via `dev-start.ps1` and remind the user to reload the extension.
+3. Update `CHANGELOG.md` (and `THIRD-PARTY-NOTICES.md` for new components).
+4. Restart via `dev-start.ps1` and remind the user to reload the extension.
+
+## Skills
+
+- Project skills live in `.opencode/skills/*/SKILL.md` (committed, portable).
+  Global vibe skills live in `~/.config/opencode/skills/*/SKILL.md`.
+  See `.opencode/skills/correntra-guardrails/SKILL.md` for the project checklist.
