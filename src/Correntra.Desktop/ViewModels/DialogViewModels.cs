@@ -56,29 +56,52 @@ public partial class DownloadConfirmationViewModel : ViewModelBase
             new LocalizedOption("Compressed", "Category.Compressed"),
             new LocalizedOption("Images", "Category.Images"),
         ];
+        rememberedDestinations = DesktopSettingsStore.Load().CategoryDestinations;
         SelectedCategory = Categories[0];
-        Destination = Path.Combine(
-            Environment.GetFolderPath(Environment.SpecialFolder.UserProfile),
-            "Downloads",
-            "Correntra",
-            SelectedCategory.Value);
+        Destination = DestinationFor(SelectedCategory.Value);
         if (!string.IsNullOrWhiteSpace(suggestedDestination))
         {
             Destination = suggestedDestination;
         }
     }
 
+    private readonly Dictionary<string, string> rememberedDestinations;
+
     public ObservableCollection<LocalizedOption> Categories { get; }
 
     public string SizeText => localizer["Dialog.Confirm.UnknownSize"];
 
-    partial void OnSelectedCategoryChanged(LocalizedOption value)
-    {
-        var root = Path.Combine(
+    private static string DefaultRoot =>
+        Path.Combine(
             Environment.GetFolderPath(Environment.SpecialFolder.UserProfile),
             "Downloads",
             "Correntra");
-        Destination = Path.Combine(root, value.Value);
+
+    private string DestinationFor(string category) =>
+        rememberedDestinations.TryGetValue(category, out string? remembered) &&
+        !string.IsNullOrWhiteSpace(remembered)
+            ? remembered
+            : Path.Combine(DefaultRoot, category);
+
+    partial void OnSelectedCategoryChanged(LocalizedOption value)
+    {
+        // IDM-style "remember this folder for this category": once saved, the
+        // same category preselects its folder on every future capture.
+        Destination = DestinationFor(value.Value);
+    }
+
+    /// <summary>Saves the current folder for the selected category when the
+    /// remember switch is set; other settings are preserved.</summary>
+    public void PersistDestinationIfRemembered()
+    {
+        if (!RememberForSite || SelectedCategory is null)
+        {
+            return;
+        }
+
+        DesktopSettings stored = DesktopSettingsStore.Load();
+        stored.CategoryDestinations[SelectedCategory.Value] = Destination;
+        DesktopSettingsStore.Save(stored);
     }
 
     private static string GuessFileName(string sourceUrl)

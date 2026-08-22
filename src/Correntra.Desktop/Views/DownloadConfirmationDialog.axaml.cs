@@ -27,6 +27,8 @@ public partial class DownloadConfirmationDialog : Window
         InitializeComponent();
         viewModel = new DownloadConfirmationViewModel(sourceUrl, suggestedFileName, suggestedDestination);
         DataContext = viewModel;
+        Topmost = true;
+        Opened += (_, _) => Activate();
     }
 
     private async void OnBrowseClick(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
@@ -53,6 +55,7 @@ public partial class DownloadConfirmationDialog : Window
 
     private void Complete(DownloadConfirmationAction action)
     {
+        viewModel.PersistDestinationIfRemembered();
         Close(new DownloadConfirmationResult(
             action,
             viewModel.Url,

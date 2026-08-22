@@ -86,4 +86,8 @@ public sealed class DesktopSettings
     public string ExcludedExtensions { get; set; } = ".pdf; .jpg; .png";
 
     public string ExcludedSites { get; set; } = string.Empty;
+
+    /// <summary>Category → folder map saved from the IDM-style "remember this
+    /// folder for this category" switch in the capture dialog.</summary>
+    public Dictionary<string, string> CategoryDestinations { get; set; } = new(StringComparer.Ordinal);
 }

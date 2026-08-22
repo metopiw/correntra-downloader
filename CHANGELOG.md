@@ -2,6 +2,23 @@
 
 All notable changes to Correntra Downloader are recorded here. Dates are UTC.
 
+## 0.3.2 — 2026-08-22
+
+### Fixed
+- **Captured downloads could surface without any visible prompt**: the save
+  confirmation was modal to the main window, so a minimized or tray-hidden
+  shell made it invisible. The dialog is now always-on-top, self-activating,
+  and the shell restores itself before showing it.
+- The capture popup now shows a live agent status dot ("Correntra çalışıyor /
+  kapalı") so a download that falls through to the browser is explained
+  instead of silent.
+
+### Added
+- IDM-style "Bu kategori için bu yolu hatırla": confirmed folders are stored
+  per category and preselect on every future capture dialog.
+- Compact IDM-like capture dialog layout with IDM wording
+  ("İndirmeyi başlat" / "Daha sonra indir").
+
 ## 0.3.1 — 2026-08-22
 
 ### Fixed

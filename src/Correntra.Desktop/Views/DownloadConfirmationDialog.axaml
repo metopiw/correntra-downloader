@@ -8,8 +8,9 @@
         Classes="dialog"
         Title="{DynamicResource Dialog.Confirm.Title}"
         Icon="/Assets/correntra.ico"
-        Width="730"
-        Height="520">
+        Width="620"
+        SizeToContent="Height"
+        MinHeight="380">
   <Grid RowDefinitions="Auto,*,Auto">
     <Border Background="{DynamicResource Corr.PanelRaised}"
             BorderBrush="{DynamicResource Corr.Border}"

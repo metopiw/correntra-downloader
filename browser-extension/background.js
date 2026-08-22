@@ -83,6 +83,10 @@ async function handleMessage(message, sender) {
     return { enabled: await isCaptureEnabled() };
   }
 
+  if (message.type === "correntra.ping") {
+    return { online: await pingAgent() };
+  }
+
   if (message.type === "correntra.sniffed") {
     const tabId = sender.tab && sender.tab.id;
     return { urls: tabId != null ? mediaByTab.get(tabId) || [] : [] };

@@ -123,6 +123,14 @@ public partial class MainWindow : Window
     public Task<DownloadConfirmationResult?> ShowPendingDownloadConfirmationAsync(DownloadJobSnapshot job)
     {
         ArgumentNullException.ThrowIfNull(job);
+        // A capture can arrive while the shell sits minimized or hidden in the
+        // tray; a modal owned by an invisible window would never be seen.
+        if (WindowState == WindowState.Minimized)
+        {
+            WindowState = WindowState.Normal;
+        }
+
+        Show();
         Activate();
         return new DownloadConfirmationDialog(
             job.SourceDisplayUri,
