@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Correntra Catch",
-  "version": "0.3.5",
+  "version": "0.3.6",
   "description": "Hand Chrome downloads and page videos to Correntra, IDM-style.",
   "action": {
     "default_title": "Correntra Catch",

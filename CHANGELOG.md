@@ -2,6 +2,16 @@
 
 All notable changes to Correntra Downloader are recorded here. Dates are UTC.
 
+## 0.3.6 — 2026-08-22
+
+### Fixed
+- **Instagram/TikTok "Kaliteler alınıyor..." → "Kalite bulunamadı"**: TikTok's
+  JS challenge (`Unable to extract universal data for rehydration`) is
+  flaky — the same URL fails and then succeeds. `YtDlpExecutor` now retries
+  the whole cookie chain once after 1.2 s for this transient error, so the
+  overlay's quality list appears instead of a generic failure. Verified on
+  `spikeandred` 7608296975917681942 and the `haruncan` Instagram Reel.
+
 ## 0.3.5 — 2026-08-22
 
 ### Fixed

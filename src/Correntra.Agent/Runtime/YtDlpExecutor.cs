@@ -254,34 +254,56 @@ public sealed partial class YtDlpExecutor
     /// <summary>
     /// Probes metadata once per cookie source. A locked or missing browser
     /// profile fails in about a second and moves the chain forward; only the
-    /// final anonymous failure propagates to the caller.
+    /// final anonymous failure propagates to the caller. TikTok's
+    /// "Unable to extract universal data" is a transient JS challenge — retry
+    /// the whole chain once after a short delay.
     /// </summary>
     private static async Task<string> CaptureWithCookieChainAsync(
         string executable,
         string url,
         CancellationToken cancellationToken)
     {
-        foreach (string browser in CookieBrowserChain)
+        for (int attempt = 0; attempt < 2; attempt++)
         {
+            foreach (string browser in CookieBrowserChain)
+            {
+                try
+                {
+                    return await RunCaptureAsync(
+                        executable,
+                        BuildEnumerateArguments(url, cookieBrowser: browser),
+                        cancellationToken).ConfigureAwait(false);
+                }
+                catch (InvalidOperationException)
+                {
+                    // Cookie extraction failed (browser running/missing); the
+                    // next source or the anonymous pass takes over.
+                }
+            }
+
             try
             {
                 return await RunCaptureAsync(
                     executable,
-                    BuildEnumerateArguments(url, cookieBrowser: browser),
+                    BuildEnumerateArguments(url, cookieBrowser: null),
                     cancellationToken).ConfigureAwait(false);
             }
-            catch (InvalidOperationException)
+            catch (InvalidOperationException ex) when (IsTransientChallenge(ex) && attempt == 0)
             {
-                // Cookie extraction failed (browser running/missing); the
-                // next source or the anonymous pass takes over.
+                await Task.Delay(1200, cancellationToken).ConfigureAwait(false);
             }
         }
 
+        // Should have returned or thrown by now; re-throw with the last error.
         return await RunCaptureAsync(
             executable,
             BuildEnumerateArguments(url, cookieBrowser: null),
             cancellationToken).ConfigureAwait(false);
     }
+
+    private static bool IsTransientChallenge(InvalidOperationException ex) =>
+        ex.Message.Contains("Unable to extract universal data", StringComparison.OrdinalIgnoreCase) ||
+        ex.Message.Contains("Solving JS challenge", StringComparison.OrdinalIgnoreCase);
 
     private static List<string> BuildEnumerateArguments(string url, string? cookieBrowser)
     {
