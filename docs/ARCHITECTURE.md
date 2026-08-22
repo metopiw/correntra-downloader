@@ -9,24 +9,22 @@ and build hosts are upgraded.
 ## Shape
 
 ```text
-Chrome / Edge MV3 extension
-        │ Native Messaging (framed JSON)
+Chrome / Edge MV3 extension (`browser-extension/`)
+        │ loopback HTTP  http://127.0.0.1:27410/
         ▼
-Correntra.NativeHost ── user-restricted named pipe ── Correntra.Agent
-                                                        │
-                           ┌────────────────────────────┼─────────────────────┐
-                           ▼                            ▼                     ▼
-                    transfer engine             media resolver        SQLite/WAL
-                           │                            │
-                           └──────── partial files ─────┴── LGPL FFmpeg sidecar
-                                                        ▲
-                                                        │ named pipe
-                                                Correntra.Desktop
+Correntra.Agent ── named pipe ── Correntra.Desktop
+        │
+        ├── transfer engine
+        ├── media resolver (HLS/DASH)
+        ├── yt-dlp sidecar (site extractors)
+        └── SQLite/WAL
 ```
 
 The Agent is the sole owner of jobs, database writes, partial files, queue
 state, and transfer workers. Closing or restarting the Desktop must not stop an
-active transfer. NativeHost contains no download logic and exposes no TCP port.
+active transfer. NativeHost remains in the tree for older tooling but is not
+used by the current extension. The Agent loopback HTTP bridge is bound to
+127.0.0.1 only and rejects non-extension web origins.
 
 ## Projects
 
@@ -45,8 +43,9 @@ active transfer. NativeHost contains no download logic and exposes no TCP port.
 - `Correntra.NativeHost`: Chrome/Edge stdio framing and strict relay.
 - `Correntra.Desktop`: Avalonia MVVM interface, confirmation dialogs, settings,
   queue and history views, audio preview.
-- `browser-extension`: Manifest V3 service worker, content/MAIN-world scripts,
-  overlay, popup, options, detection, and Native Messaging client.
+- `browser-extension`: Manifest V3 service worker, content script overlay
+  (closed ShadowRoot, viewport-fixed so the quality menu is not clipped by
+  the player), popup capture switch, loopback HTTP client.
 
 ## Invariants
 

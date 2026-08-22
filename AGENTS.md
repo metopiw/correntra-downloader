@@ -5,22 +5,23 @@ Correntra is an IDM-class download manager: Avalonia desktop shell
 (`src/Correntra.Agent`), a segmented HTTP engine (`src/Correntra.Transfer`),
 media/HLS/DASH handling (`src/Correntra.Media`) and social-site extraction
 via a bundled **yt-dlp** sidecar (`src/Correntra.Agent/Runtime/YtDlpExecutor.cs`).
-No browser extension ships with this repository; browser integration is an
-external concern that talks to the agent over the loopback HTTP bridge.
+Browser integration is the unpacked Manifest V3 extension in
+`browser-extension/`, talking to the agent over the loopback HTTP bridge
+(not Chrome native messaging).
 
 ## Build / test / run
 
 - .NET 8 SDK. `dotnet build Correntra.sln -c Debug`,
   `dotnet test Correntra.sln -c Debug --no-build`.
-- **Browser integration seam (for future extensions)**: the agent serves a
-  loopback-only HTTP bridge at `http://127.0.0.1:27410/` from
-  `AgentLocalHttpServer`: `GET /ping`, `GET /jobs`, `POST /takeover`,
-  `POST /confirm`. An extension only needs the `downloads` permission and a
-  host permission for that origin; it POSTs the same takeover payload the old
-  extension used. Test the bridge with `scripts/test-bridge.ps1` (or curl).
-  **Never reintroduce Chrome native messaging** for this: it proved
-  untestable from the agent side and fragile on this machine (manifest
-  allowed_origins, extension IDs, silent failures).
+- **Browser integration**: the agent serves a loopback-only HTTP bridge at
+  `http://127.0.0.1:27410/` from `AgentLocalHttpServer`: `GET /ping`,
+  `GET /jobs`, `POST /takeover`, `POST /confirm`, `POST /media/resolve`,
+  `POST /media/start`. Load `browser-extension/` unpacked in Chrome/Edge
+  (`chrome://extensions` → Developer mode → Load unpacked). The extension
+  needs `downloads` plus host access to that origin. Test takeover with
+  `scripts/test-bridge.ps1` (or curl). **Never reintroduce Chrome native
+  messaging** for this: it proved untestable from the agent side and fragile
+  on this machine (manifest allowed_origins, extension IDs, silent failures).
 - Full dev launch: `baslat.bat` → `scripts/dev-start.ps1` (builds solution,
   deploys `yt-dlp.exe`/ffmpeg into both bin outputs, starts agent + desktop).
 - Social/video URLs are supported through the desktop app: Add URL with a
@@ -47,11 +48,11 @@ external concern that talks to the agent over the loopback HTTP bridge.
 - Downloads persist in SQLite; progress checkpoints are per-destination
   `*.correntra.part.checkpoint.json` files. Resume correctness depends on
   `CanResume` validators (ETag/Last-Modified) — keep them strict.
-- Social-platform URLs (see `YtDlpExecutor.SupportedDomains`) must go through
-  yt-dlp; plain HTTP fetches of those pages only save HTML. Jobs whose source
-  host is social are routed automatically in `DownloadJobCoordinator`; the
-  selected quality is carried in the job header `X-Correntra-Format` (never
-  sent to any server).
+- Social-platform and other extractor URLs (see `YtDlpExecutor`) must go
+  through yt-dlp; plain HTTP fetches of those pages only save HTML. Jobs
+  whose source host is a known platform, or that carry `X-Correntra-Format`,
+  are routed in `DownloadJobCoordinator`; the selected quality is never sent
+  to any media server.
 - yt-dlp runs with `--cookies-from-browser chrome` first and falls back to an
   anonymous pass; FFmpeg is located via `--ffmpeg-location`.
 

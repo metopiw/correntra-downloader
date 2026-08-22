@@ -2,6 +2,28 @@
 
 All notable changes to Correntra Downloader are recorded here. Dates are UTC.
 
+## 0.3.0 — 2026-08-19
+
+### Added
+- **Correntra Catch** browser extension (`browser-extension/`): Manifest V3,
+  Chrome/Edge unpacked load. A thin IDM-style bar sits on the **video frame**
+  (top-right), at 50% opacity until hovered. Clicking it lists qualities
+  highest-first; choosing one opens Correntra's save confirmation.
+- Loopback bridge media routes: `POST /media/resolve`, `POST /media/start`
+  (plus CORS for `chrome-extension://` origins, including private-network
+  preflight). `scripts/test-bridge.ps1` still covers takeover.
+- Broader site extraction: yt-dlp host list expanded, unknown watch pages
+  try the extractor, and jobs with `X-Correntra-Format` always run through
+  yt-dlp so a generic site cannot save HTML. Direct `.mp4`/`.m3u8` files on
+  unrelated hosts still use the HTTP/HLS engines.
+- Network sniffing in the extension for generic players (HLS/DASH/progressive)
+  when the `<video>` element only exposes a blob URL.
+
+### Changed
+- Browser session cookies stay in the existing yt-dlp
+  `--cookies-from-browser chrome` path (anonymous fallback unchanged). The
+  extension does not copy cookie values into logs or extension storage.
+
 ## 0.2.1 — 2026-08-18
 
 ### Removed

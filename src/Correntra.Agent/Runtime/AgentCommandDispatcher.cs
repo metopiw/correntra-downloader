@@ -140,15 +140,14 @@ public sealed partial class AgentCommandDispatcher
                 YtDlpInfo info = await _ytDlpExecutor.EnumerateFormatsAsync(
                     ytDlpTarget.AbsoluteUri,
                     cancellationToken).ConfigureAwait(false);
-                List<MediaQualityOption> options = info.Options
+                List<MediaQualityOption> options = RankQualities(info.Options
                     .Select(option => new MediaQualityOption(
                         option.Id,
                         option.DisplayName,
                         option.IsAudioOnly ? "audio" : "mp4",
                         option.Height,
                         null,
-                        null))
-                    .ToList();
+                        null)));
                 if (options.Count > 0)
                 {
                     return AgentResponseEnvelope.Accepted(
@@ -192,21 +191,37 @@ public sealed partial class AgentCommandDispatcher
             return AgentResponseEnvelope.Rejected(request.RequestId, "media-resolve-failed", AgentVersion);
         }
 
-        List<MediaQualityOption> qualities = descriptor.Variants
-            .Where(variant => variant.TrackKind is MediaTrackKind.Video or MediaTrackKind.Muxed)
+        List<MediaQualityOption> qualities = RankQualities(descriptor.Variants
+            .Where(variant => variant.TrackKind is MediaTrackKind.Video or MediaTrackKind.Muxed or MediaTrackKind.Audio)
             .Select(variant => new MediaQualityOption(
                 variant.Id,
                 variant.DisplayName ?? QualityFallback(variant),
                 variant.Container ?? "mp4",
                 variant.Height,
                 variant.Bitrate,
-                variant.MimeType))
-            .ToList();
+                variant.MimeType)));
 
         return AgentResponseEnvelope.Accepted(
             request.RequestId,
             AgentVersion,
             mediaQualities: qualities);
+    }
+
+    /// <summary>
+    /// IDM lists highest video first and parks audio-only at the bottom.
+    /// Duplicate heights from paired video+audio tracks collapse to one row.
+    /// </summary>
+    internal static List<MediaQualityOption> RankQualities(IEnumerable<MediaQualityOption> options)
+    {
+        return options
+            .GroupBy(static option => option.Height is > 0
+                ? "v:" + option.Height.Value.ToString(System.Globalization.CultureInfo.InvariantCulture)
+                : "a:" + option.Id, StringComparer.Ordinal)
+            .Select(static group => group.OrderByDescending(option => option.Bitrate ?? 0).First())
+            .OrderBy(static option => option.Height is > 0 ? 0 : 1)
+            .ThenByDescending(static option => option.Height ?? 0)
+            .ThenByDescending(static option => option.Bitrate ?? 0)
+            .ToList();
     }
 
     private static string QualityFallback(MediaVariant variant)
@@ -220,17 +235,20 @@ public sealed partial class AgentCommandDispatcher
 
     private Uri? SelectYtDlpTarget(Uri source, Uri? pageUrl)
     {
-        if (!_ytDlpExecutor.IsAvailable)
+        if (!_ytDlpExecutor.IsAvailable || !YtDlpExecutor.ShouldExtractWithYtDlp(source, pageUrl))
         {
             return null;
         }
 
-        if (pageUrl is not null && YtDlpExecutor.IsSupportedHost(pageUrl))
+        if (pageUrl is not null &&
+            (YtDlpExecutor.IsSupportedHost(pageUrl) ||
+             YtDlpExecutor.IsFragmentCdn(source) ||
+             !YtDlpExecutor.LooksLikeDirectMedia(source)))
         {
             return pageUrl;
         }
 
-        return YtDlpExecutor.IsSupportedHost(source) ? source : null;
+        return YtDlpExecutor.IsSupportedHost(source) ? source : pageUrl ?? source;
     }
 
     private async Task<AgentResponseEnvelope> CreateFromMediaAsync(
@@ -266,6 +284,10 @@ public sealed partial class AgentCommandDispatcher
             {
                 container = null;
             }
+
+            // The coordinator only routes unknown sites through yt-dlp when this
+            // header is present; a missing selector would HTTP-GET the HTML page.
+            formatId ??= "bestvideo+bestaudio/best";
         }
 
         string extension = NormalizeExtension(container) ?? GetExtensionFromUri(source) ?? (category == "Music" ? ".m4a" : ".mp4");
@@ -275,9 +297,14 @@ public sealed partial class AgentCommandDispatcher
         if (formatId is not null && ytDlpTarget is not null)
         {
             headers[YtDlpExecutor.FormatHeader] = formatId;
-            if (formatId.Contains("bestaudio", StringComparison.OrdinalIgnoreCase))
+            if (formatId.Contains("bestaudio", StringComparison.OrdinalIgnoreCase) &&
+                !formatId.Contains("bestvideo", StringComparison.OrdinalIgnoreCase))
             {
                 category = "Music";
+                if (string.Equals(Path.GetExtension(fileName), ".mp4", StringComparison.OrdinalIgnoreCase))
+                {
+                    fileName = SafePath.SanitizeFileName(Path.GetFileNameWithoutExtension(fileName) + ".m4a");
+                }
             }
         }
 

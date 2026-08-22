@@ -41,13 +41,61 @@ public sealed partial class YtDlpExecutor
         "x.com",
         "tiktok.com",
         "twitch.tv",
+        "kick.com",
         "vimeo.com",
         "reddit.com",
         "redd.it",
         "dailymotion.com",
         "tumblr.com",
         "soundcloud.com",
+        "bandcamp.com",
+        "mixcloud.com",
+        "vk.com",
+        "vk.ru",
+        "vkvideo.ru",
+        "ok.ru",
+        "rutube.ru",
+        "rumble.com",
+        "bitchute.com",
+        "odysee.com",
+        "bilibili.com",
+        "nicovideo.jp",
+        "streamable.com",
+        "pinterest.com",
+        "linkedin.com",
+        "imdb.com",
+        "archive.org",
+        "aparat.com",
+        "9gag.com",
+        "pornhub.com",
+        "xvideos.com",
+        "xnxx.com",
+        "xhamster.com",
     ];
+
+    private static readonly string[] FragmentCdnMarkers =
+    [
+        "googlevideo.com",
+        "ytimg.com",
+        "ggpht.com",
+        "tiktokcdn.com",
+        "tiktokv.com",
+        "byteoversea.com",
+        "ibyteimg.com",
+        "fbcdn.net",
+        "cdninstagram.com",
+        "twimg.com",
+        "video.twimg.com",
+        "pinimg.com",
+        "vumbnail.com",
+    ];
+
+    private static readonly HashSet<string> DirectMediaExtensions = new(StringComparer.OrdinalIgnoreCase)
+    {
+        ".mp4", ".webm", ".mkv", ".mov", ".m4v", ".avi",
+        ".m4a", ".mp3", ".aac", ".ogg", ".opus", ".flac", ".wav",
+        ".m3u8", ".mpd", ".ts",
+    };
 
     private readonly string? _ytDlpPath;
 
@@ -71,6 +119,65 @@ public sealed partial class YtDlpExecutor
         }
 
         return false;
+    }
+
+    /// <summary>
+    /// True for signed/rotating CDN hosts that look like a file URL but are
+    /// only a fragment; the watch-page URL must be extracted instead.
+    /// </summary>
+    public static bool IsFragmentCdn(Uri uri)
+    {
+        ArgumentNullException.ThrowIfNull(uri);
+        string host = uri.Host;
+        foreach (string marker in FragmentCdnMarkers)
+        {
+            if (string.Equals(host, marker, StringComparison.OrdinalIgnoreCase) ||
+                host.EndsWith("." + marker, StringComparison.OrdinalIgnoreCase))
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /// <summary>
+    /// True when the URL path is a standalone progressive file or playlist
+    /// that the HTTP/HLS/DASH engines can fetch without a site extractor.
+    /// </summary>
+    public static bool LooksLikeDirectMedia(Uri uri)
+    {
+        ArgumentNullException.ThrowIfNull(uri);
+        string extension = Path.GetExtension(uri.AbsolutePath);
+        return DirectMediaExtensions.Contains(extension);
+    }
+
+    /// <summary>
+    /// Chooses yt-dlp for known platforms, MSE/blob watch pages, and fragment
+    /// CDNs. Direct <c>.mp4</c>/<c>.m3u8</c> files on unrelated hosts stay on
+    /// the HTTP engine so a normal file download is not forced through yt-dlp.
+    /// Unknown watch pages still try yt-dlp: the sidecar already ships hundreds
+    /// of extractors, and a failed probe falls back to manifest resolution.
+    /// </summary>
+    public static bool ShouldExtractWithYtDlp(Uri source, Uri? pageUrl)
+    {
+        ArgumentNullException.ThrowIfNull(source);
+        if (IsSupportedHost(source) || (pageUrl is not null && IsSupportedHost(pageUrl)))
+        {
+            return true;
+        }
+
+        if (IsFragmentCdn(source))
+        {
+            return pageUrl is not null;
+        }
+
+        if (LooksLikeDirectMedia(source))
+        {
+            return false;
+        }
+
+        return pageUrl is not null;
     }
 
     /// <summary>Lists the downloadable qualities for a page or media URL.</summary>

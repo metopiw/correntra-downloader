@@ -107,7 +107,16 @@ public sealed class AgentLocalHttpServer
             return;
         }
 
+        ApplyCors(context.Response, origin);
+
         string path = context.Request.Url?.AbsolutePath ?? "/";
+        if (context.Request.HttpMethod == "OPTIONS")
+        {
+            context.Response.StatusCode = 204;
+            context.Response.Close();
+            return;
+        }
+
         if (path == "/ping" && context.Request.HttpMethod == "GET")
         {
             await WriteJsonAsync(context, new { healthy = true }).ConfigureAwait(false);
@@ -132,7 +141,8 @@ public sealed class AgentLocalHttpServer
             return;
         }
 
-        if (path == "/takeover" && context.Request.HttpMethod == "POST")
+        if (context.Request.HttpMethod == "POST" &&
+            path is "/takeover" or "/confirm" or "/media/resolve" or "/media/start")
         {
             byte[] body = await ReadBodyAsync(context.Request).ConfigureAwait(false);
             if (body.Length == 0)
@@ -142,25 +152,17 @@ public sealed class AgentLocalHttpServer
                 return;
             }
 
-            using JsonDocument document = JsonDocument.Parse(body);
-            AgentResponseEnvelope response = await DispatchRawAsync("takeover.offer", document.RootElement.Clone())
-                .ConfigureAwait(false);
-            await WriteJsonAsync(context, response.Payload).ConfigureAwait(false);
-            return;
-        }
-
-        if (path == "/confirm" && context.Request.HttpMethod == "POST")
-        {
-            byte[] body = await ReadBodyAsync(context.Request).ConfigureAwait(false);
-            if (body.Length == 0)
+            string kind = path switch
             {
-                context.Response.StatusCode = 400;
-                context.Response.Close();
-                return;
-            }
+                "/takeover" => "takeover.offer",
+                "/confirm" => "download.confirm",
+                "/media/resolve" => "media.resolve",
+                "/media/start" => "media.start",
+                _ => "unsupported-command",
+            };
 
             using JsonDocument document = JsonDocument.Parse(body);
-            AgentResponseEnvelope response = await DispatchRawAsync("download.confirm", document.RootElement.Clone())
+            AgentResponseEnvelope response = await DispatchRawAsync(kind, document.RootElement.Clone())
                 .ConfigureAwait(false);
             await WriteJsonAsync(context, response.Payload).ConfigureAwait(false);
             return;
@@ -168,6 +170,20 @@ public sealed class AgentLocalHttpServer
 
         context.Response.StatusCode = 404;
         context.Response.Close();
+    }
+
+    private static void ApplyCors(HttpListenerResponse response, string? origin)
+    {
+        if (origin is null || !origin.StartsWith("chrome-extension://", StringComparison.OrdinalIgnoreCase))
+        {
+            return;
+        }
+
+        response.Headers.Set("Access-Control-Allow-Origin", origin);
+        response.Headers.Set("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
+        response.Headers.Set("Access-Control-Allow-Headers", "content-type");
+        response.Headers.Set("Access-Control-Allow-Private-Network", "true");
+        response.Headers.Set("Vary", "Origin");
     }
 
     private async Task<AgentResponseEnvelope> DispatchRawAsync(string kind, JsonElement payload)

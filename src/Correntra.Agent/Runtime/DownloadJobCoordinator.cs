@@ -385,7 +385,7 @@ public sealed class DownloadJobCoordinator : IAsyncDisposable
             // media through script-generated streams; a plain HTTP fetch would
             // only save a few kilobytes of HTML/manifest. Route them through
             // the yt-dlp engine, which also carries user-picked qualities.
-            if (_ytDlpExecutor.IsAvailable && YtDlpExecutor.IsSupportedHost(job.Source))
+            if (_ytDlpExecutor.IsAvailable && ShouldRunYtDlp(job))
             {
                 await RunYtDlpAsync(job, cancellation.Token).ConfigureAwait(false);
                 return;
@@ -543,6 +543,26 @@ public sealed class DownloadJobCoordinator : IAsyncDisposable
                 GetSafeFailureMessage(exception),
                 CancellationToken.None).ConfigureAwait(false);
         }
+    }
+
+    private static bool ShouldRunYtDlp(AgentJobRecord job)
+    {
+        if (YtDlpExecutor.IsSupportedHost(job.Source))
+        {
+            return true;
+        }
+
+        // Overlay quality picks stamp this header so unknown watch pages still
+        // go through the extractor instead of saving the HTML document.
+        foreach (KeyValuePair<string, string> header in job.Headers)
+        {
+            if (string.Equals(header.Key, YtDlpExecutor.FormatHeader, StringComparison.OrdinalIgnoreCase))
+            {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     private async Task RunYtDlpAsync(AgentJobRecord job, CancellationToken cancellationToken)

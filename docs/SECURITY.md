@@ -9,11 +9,10 @@
 
 ## Browser credentials
 
-The extension observes technical request metadata without recording cookies.
-Only after the user chooses a download may it request cookies matching the
-target URL. It passes the minimum Cookie/Referer/User-Agent context to the
-NativeHost, never passwords or localStorage. Extension persistent storage must
-not contain credential values.
+The extension does not store cookies. Logged-in YouTube/Facebook sessions
+are applied by the agent via yt-dlp `--cookies-from-browser chrome`, then an
+anonymous retry. Extension persistent storage must not contain credential
+values.
 
 If restart-safe persistence is needed, the Agent encrypts the credential blob
 for the current Windows user and gives it a short expiry. It is removed when the
@@ -28,8 +27,9 @@ disabled.
   metadata are untrusted and size-limited.
 - Output paths are canonicalised under an approved destination; reserved device
   names, traversal, alternate streams, and control characters are rejected.
-- The Agent does not listen on localhost TCP. Named pipes are restricted to the
-  current user.
+- The Agent loopback HTTP bridge (`127.0.0.1:27410`) accepts only missing
+  Origin (local tools) or `chrome-extension://` Origin. Web pages receive 403.
+- Named pipes to the Desktop remain restricted to the current user.
 - Downloaded files receive Windows Mark-of-the-Web where applicable and are not
   executed automatically.
 
