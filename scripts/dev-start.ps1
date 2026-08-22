@@ -5,6 +5,10 @@ $ErrorActionPreference = "Stop"
 $repositoryRoot = [IO.Path]::GetFullPath((Join-Path $PSScriptRoot ".."))
 Set-Location $repositoryRoot
 
+# Kill lingering processes that lock DLLs (baslat.bat bug)
+Get-Process -Name "Correntra","Correntra.Agent" -ErrorAction SilentlyContinue | Stop-Process -Force -ErrorAction SilentlyContinue
+Start-Sleep -Milliseconds 800
+
 if (-not $SkipBuild) {
     dotnet restore Correntra.sln
     if ($LASTEXITCODE -ne 0) { throw "dotnet restore failed." }
