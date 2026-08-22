@@ -1,0 +1,26 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        x:Class="Correntra.Desktop.Views.UpdateToastWindow"
+        Width="360"
+        SizeToContent="Height"
+        CanResize="False"
+        ShowInTaskbar="False"
+        SystemDecorations="None"
+        Background="#16222E"
+        ShowActivated="False"
+        Icon="/Assets/correntra.ico">
+  <Border CornerRadius="12" Background="#16222E" BorderBrush="#2C3B4A" BorderThickness="1" Margin="10,10,10,14">
+    <Grid RowDefinitions="Auto,*,Auto" Margin="16,12,16,12">
+      <StackPanel Orientation="Horizontal" Spacing="10">
+        <Image Source="/Assets/correntra-mark.png" Width="24" Height="24" />
+        <TextBlock x:Name="HeadingText" FontSize="14" FontWeight="SemiBold" Foreground="#F5F8FA" VerticalAlignment="Center" />
+      </StackPanel>
+      <TextBlock Grid.Row="1" x:Name="BodyText" TextWrapping="Wrap" FontSize="12" Foreground="#BBC7D2" Margin="0,8,0,8" />
+      <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right" Spacing="8">
+        <Button x:Name="LaterButton" MinWidth="84" Padding="12,6" Click="OnLaterClick" />
+        <Button x:Name="InstallButton" MinWidth="110" Padding="12,6" Click="OnInstallClick"
+                Background="#087D86" Foreground="White" />
+      </StackPanel>
+    </Grid>
+  </Border>
+</Window>

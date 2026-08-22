@@ -1,5 +1,6 @@
 using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Styling;
 using Correntra.Desktop.Services;
 using Correntra.Desktop.ViewModels;
@@ -14,10 +15,25 @@ public partial class SettingsWindow : Window
     {
         InitializeComponent();
         DataContext = viewModel;
+        CurrentVersionText.Text = string.Format(
+            System.Globalization.CultureInfo.CurrentCulture,
+            LocalizationService.Current["Update.Version"],
+            GitHubUpdateService.CurrentVersion.ToString(3));
     }
 
     private async void OnOpenSchedulerClick(object? sender, Avalonia.Interactivity.RoutedEventArgs e) =>
         await new QueueScheduleDialog().ShowDialog(this).ConfigureAwait(true);
+
+    private async void OnCheckUpdatesClick(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
+    {
+        UpdateStatusText.Text = LocalizationService.Current["Settings.Updates.Checking"];
+        MainViewModel mainViewModel = App.CurrentMainWindow?.DataContext as MainViewModel ?? new MainViewModel();
+        string status = await GitHubUpdateService.CheckAndOfferAsync(
+            this,
+            mainViewModel,
+            viewModel.IncludePrereleases).ConfigureAwait(true);
+        UpdateStatusText.Text = status;
+    }
 
     private void OnSaveClick(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
     {
@@ -29,6 +45,7 @@ public partial class SettingsWindow : Window
         }
 
         LocalizationService.Current.SetLanguage(viewModel.SelectedLanguage.Value);
+        viewModel.Save();
         Close(true);
     }
 

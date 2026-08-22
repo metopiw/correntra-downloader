@@ -14,6 +14,10 @@ public partial class App : Application, IDisposable
 {
     private DesktopAgentBridge? agentBridge;
 
+    /// <summary>Shared access for dialogs (settings update check) that need the
+    /// live main view model but are not created through the lifetime callback.</summary>
+    internal static MainWindow? CurrentMainWindow { get; private set; }
+
     public override void Initialize()
     {
         AvaloniaXamlLoader.Load(this);
@@ -31,6 +35,7 @@ public partial class App : Application, IDisposable
                 DataContext = viewModel,
             };
             desktop.MainWindow = mainWindow;
+            CurrentMainWindow = mainWindow;
             if (!Design.IsDesignMode)
             {
                 agentBridge = new DesktopAgentBridge(
@@ -67,7 +72,7 @@ public partial class App : Application, IDisposable
         }
 
         Observe(bridge.StartAsync(), "Desktop Agent bridge startup");
-        Observe(GitHubUpdateService.CheckAndOfferAsync(mainWindow, viewModel), "GitHub update check");
+        Observe(GitHubUpdateService.RunStartupCheckAsync(mainWindow, viewModel), "GitHub update check");
     }
 
     private static void Observe(Task task, string operation)

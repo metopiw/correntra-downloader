@@ -582,6 +582,7 @@ public sealed class DownloadJobCoordinator : IAsyncDisposable
             long lastReported = -1;
             long lastTotal = -1;
             long lastReportTicks = 0;
+            bool finalizingWritten = false;
             YtDlpDownloadResult result = await _ytDlpExecutor.DownloadAsync(
                 job.Source.AbsoluteUri,
                 formatSelector,
@@ -618,7 +619,10 @@ public sealed class DownloadJobCoordinator : IAsyncDisposable
                         transferred = total;
                     }
 
-                    if (transferred == lastReported)
+                    // Retries and multi-track runs can produce samples that go
+                    // backwards or stall at the same value; the visible bar
+                    // must never regress.
+                    if (transferred <= lastReported)
                     {
                         return;
                     }
@@ -629,6 +633,24 @@ public sealed class DownloadJobCoordinator : IAsyncDisposable
                         DownloadJobState.Downloading,
                         transferred,
                         total,
+                        DateTimeOffset.UtcNow,
+                        CancellationToken.None);
+                },
+                onFinalizing: () =>
+                {
+                    // Merge/remux emits no progress lines; pin the row to
+                    // Finalizing so the user does not read it as a hang.
+                    if (finalizingWritten)
+                    {
+                        return;
+                    }
+
+                    finalizingWritten = true;
+                    _ = _repository.UpdateProgressAsync(
+                        job.Id,
+                        DownloadJobState.Finalizing,
+                        Math.Max(0, lastReported),
+                        lastTotal > 0 ? lastTotal : null,
                         DateTimeOffset.UtcNow,
                         CancellationToken.None);
                 },

@@ -256,9 +256,6 @@ public partial class SettingsViewModel : ViewModelBase
     [ObservableProperty]
     private bool includePrereleases;
 
-    [ObservableProperty]
-    private string updateChannel = "Stable";
-
     public SettingsViewModel()
     {
         Themes =
@@ -273,11 +270,47 @@ public partial class SettingsViewModel : ViewModelBase
         ];
         SelectedTheme = Themes[0];
         SelectedLanguage = LocalizationService.Current.LanguageCode == "en" ? Languages[1] : Languages[0];
+        Load();
     }
 
     public ObservableCollection<LocalizedOption> Themes { get; }
 
     public ObservableCollection<LocalizedOption> Languages { get; }
 
-    public IReadOnlyList<string> UpdateChannels { get; } = ["Stable", "Preview"];
+    /// <summary>Fills the dialog from the persisted store; defaults survive a missing file.</summary>
+    private void Load()
+    {
+        DesktopSettings stored = DesktopSettingsStore.Load();
+        SelectedTheme = Themes.FirstOrDefault(option => option.Value == stored.Theme) ?? Themes[0];
+        SelectedLanguage = Languages.FirstOrDefault(option => option.Value == stored.Language) ?? Languages[0];
+        CheckUpdatesAtStartup = stored.CheckUpdatesAtStartup;
+        IncludePrereleases = stored.IncludePrereleases;
+        ConcurrentDownloads = stored.ConcurrentDownloads;
+        SegmentsPerDownload = stored.SegmentsPerDownload;
+        GlobalSpeedLimit = stored.GlobalSpeedLimit;
+        RetryTemporaryErrors = stored.RetryTemporaryErrors;
+        CrashReportsRequireApproval = stored.CrashReportsRequireApproval;
+        KeepHistory = stored.KeepHistory;
+        ExcludedExtensions = stored.ExcludedExtensions;
+        ExcludedSites = stored.ExcludedSites;
+    }
+
+    public void Save()
+    {
+        DesktopSettingsStore.Save(new DesktopSettings
+        {
+            Theme = SelectedTheme.Value,
+            Language = SelectedLanguage.Value,
+            CheckUpdatesAtStartup = CheckUpdatesAtStartup,
+            IncludePrereleases = IncludePrereleases,
+            ConcurrentDownloads = ConcurrentDownloads,
+            SegmentsPerDownload = SegmentsPerDownload,
+            GlobalSpeedLimit = GlobalSpeedLimit,
+            RetryTemporaryErrors = RetryTemporaryErrors,
+            CrashReportsRequireApproval = CrashReportsRequireApproval,
+            KeepHistory = KeepHistory,
+            ExcludedExtensions = ExcludedExtensions,
+            ExcludedSites = ExcludedSites,
+        });
+    }
 }

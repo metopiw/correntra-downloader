@@ -303,7 +303,9 @@ public sealed partial class YtDlpExecutor
     /// Downloads the media to <paramref name="outputPath"/>. Each cookie
     /// source is tried in turn (locked profiles fail fast), then an anonymous
     /// pass; yt-dlp writes the file directly (no .part), so interrupted runs
-    /// can simply be restarted.
+    /// can simply be restarted. <paramref name="onFinalizing"/> fires when the
+    /// merge/remux stage starts — no download progress lines exist there, so
+    /// without it the UI would freeze on the last percentage.
     /// </summary>
     public async Task<YtDlpDownloadResult> DownloadAsync(
         string url,
@@ -311,6 +313,7 @@ public sealed partial class YtDlpExecutor
         string outputPath,
         IReadOnlyDictionary<string, string>? headers = null,
         Action<double, long?>? onProgress = null,
+        Action? onFinalizing = null,
         CancellationToken cancellationToken = default)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(url);
@@ -322,6 +325,7 @@ public sealed partial class YtDlpExecutor
             BuildDownloadArguments(url, formatSelector, outputPath, headers, CookieBrowserChain[0]),
             outputPath,
             onProgress,
+            onFinalizing,
             cancellationToken).ConfigureAwait(false);
         if (!result.Succeeded)
         {
@@ -331,6 +335,7 @@ public sealed partial class YtDlpExecutor
                     BuildDownloadArguments(url, formatSelector, outputPath, headers, browser),
                     outputPath,
                     onProgress,
+                    onFinalizing,
                     cancellationToken).ConfigureAwait(false);
                 if (result.Succeeded)
                 {
@@ -344,6 +349,7 @@ public sealed partial class YtDlpExecutor
                 BuildDownloadArguments(url, formatSelector, outputPath, headers, cookieBrowser: null),
                 outputPath,
                 onProgress,
+                onFinalizing,
                 cancellationToken).ConfigureAwait(false);
         }
 
@@ -418,6 +424,7 @@ public sealed partial class YtDlpExecutor
         List<string> arguments,
         string outputPath,
         Action<double, long?>? onProgress,
+        Action? onFinalizing,
         CancellationToken cancellationToken)
     {
         var startInfo = new ProcessStartInfo
@@ -443,8 +450,8 @@ public sealed partial class YtDlpExecutor
         }
 
         var diagnostic = new StringBuilder();
-        Task outputDrain = DrainLinesAsync(process.StandardOutput, diagnostic, onProgress, cancellationToken);
-        Task errorDrain = DrainLinesAsync(process.StandardError, diagnostic, null, cancellationToken);
+        Task outputDrain = DrainLinesAsync(process.StandardOutput, diagnostic, onProgress, onFinalizing, cancellationToken);
+        Task errorDrain = DrainLinesAsync(process.StandardError, diagnostic, null, null, cancellationToken);
 
         try
         {
@@ -531,17 +538,47 @@ public sealed partial class YtDlpExecutor
         return output;
     }
 
+    /// <summary>
+    /// Maps yt-dlp console output onto one monotonic 0..100 curve. YouTube
+    /// jobs fetch separate video and audio items back to back and every
+    /// "[download] Destination:" line restarts the raw percentage at zero —
+    /// reporting those percentages verbatim made the bar jump backwards or
+    /// freeze mid-way (the "stuck at 66%" report). Sizes from the "of SIZE"
+    /// suffix are accumulated so earlier tracks count toward the total, and
+    /// merge/remux lines switch the job to its finalizing phase where no
+    /// progress lines exist.
+    /// </summary>
     private static async Task DrainLinesAsync(
         StreamReader reader,
         StringBuilder diagnostic,
         Action<double, long?>? onProgress,
+        Action? onFinalizing,
         CancellationToken cancellationToken)
     {
+        long completedBytes = 0;
+        long? currentTrackBytes = null;
+        bool finalizingSent = false;
+
         while (await reader.ReadLineAsync(cancellationToken).ConfigureAwait(false) is { } line)
         {
             AppendLimited(diagnostic, line);
+
+            if (onFinalizing is not null && !finalizingSent && IsPostProcessingLine(line))
+            {
+                finalizingSent = true;
+                onFinalizing();
+                continue;
+            }
+
             if (onProgress is null)
             {
+                continue;
+            }
+
+            if (line.StartsWith("[download] Destination:", StringComparison.Ordinal))
+            {
+                completedBytes += currentTrackBytes ?? 0;
+                currentTrackBytes = null;
                 continue;
             }
 
@@ -551,11 +588,36 @@ public sealed partial class YtDlpExecutor
                 continue;
             }
 
-            double percent = double.Parse(match.Groups["pct"].Value, CultureInfo.InvariantCulture);
+            double percent = Math.Clamp(double.Parse(match.Groups["pct"].Value, CultureInfo.InvariantCulture), 0, 100);
             long? estimatedTotal = ParseSize(match.Groups["size"].Value, match.Groups["unit"].Value);
-            onProgress(Math.Clamp(percent, 0, 100), estimatedTotal);
+            if (estimatedTotal is { } size)
+            {
+                currentTrackBytes = size;
+            }
+
+            double overallPercent;
+            long? overallTotal;
+            if (currentTrackBytes is { } trackSize)
+            {
+                overallTotal = completedBytes + trackSize;
+                overallPercent = 100d * (completedBytes + trackSize * percent / 100d) / overallTotal.Value;
+            }
+            else
+            {
+                // Unknown size: keep the raw in-track percentage; the
+                // coordinator's monotonic guard hides any backwards jump.
+                overallPercent = percent;
+                overallTotal = null;
+            }
+
+            onProgress(Math.Clamp(overallPercent, 0, 100), overallTotal);
         }
     }
+
+    private static bool IsPostProcessingLine(string line) =>
+        line.StartsWith("[Merger]", StringComparison.Ordinal) ||
+        line.StartsWith("[VideoRemuxer]", StringComparison.Ordinal) ||
+        line.StartsWith("[ExtractAudio]", StringComparison.Ordinal);
 
     private static long? ParseSize(string size, string unit)
     {

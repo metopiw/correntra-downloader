@@ -161,14 +161,11 @@
             <TextBlock Text="{DynamicResource Settings.Updates.Heading}" Classes="sectionTitle" />
             <Border Classes="card">
               <StackPanel Spacing="12">
-                <TextBlock Text="{DynamicResource About.Version}" Foreground="{DynamicResource Corr.Accent}" FontSize="16" FontWeight="SemiBold" />
+                <TextBlock x:Name="CurrentVersionText" Foreground="{DynamicResource Corr.Accent}" FontSize="16" FontWeight="SemiBold" />
                 <CheckBox Content="{DynamicResource Settings.Updates.AutoCheck}" IsChecked="{Binding CheckUpdatesAtStartup}" />
                 <CheckBox Content="{DynamicResource Settings.Updates.Prerelease}" IsChecked="{Binding IncludePrereleases}" />
-                <StackPanel Spacing="6">
-                  <TextBlock Text="{DynamicResource Settings.Updates.Channel}" FontWeight="SemiBold" />
-                  <ComboBox SelectedItem="{Binding UpdateChannel}" ItemsSource="{Binding UpdateChannels}" />
-                </StackPanel>
-                <Button Classes="secondary" Content="{DynamicResource Settings.Updates.Check}" HorizontalAlignment="Left" />
+                <Button Classes="secondary" Content="{DynamicResource Settings.Updates.Check}" HorizontalAlignment="Left" Click="OnCheckUpdatesClick" />
+                <TextBlock x:Name="UpdateStatusText" TextWrapping="Wrap" Foreground="{DynamicResource Corr.TextSecondary}" />
               </StackPanel>
             </Border>
           </StackPanel>

@@ -15,11 +15,36 @@ All notable changes to Correntra Downloader are recorded here. Dates are UTC.
   through edge → firefox before the anonymous attempt.
 - Bot-check / age-gate / HTTP 403 rejections surface an actionable failure
   message instead of a bare transport error.
+- **Progress bar froze mid-way (e.g. "%66") while the file was already
+  usable**: yt-dlp restarts its percentage at zero for every video/audio
+  track, so the UI read raw in-track numbers. Progress is now cumulative and
+  monotonic across all tracks, and merge/remux moves the row to a distinct
+  "Birleştiriliyor / Finalizing…" state instead of pretending to still
+  download.
 
 ### Added
+- Update checking now works outside setup installs: the latest GitHub
+  release is compared against the app version (anonymous API first, the
+  locally authenticated `gh` CLI as fallback for private repositories) and a
+  small bottom-right toast offers to install. Velopack self-update is used
+  when the app is setup-installed; portable runs open the release page.
+- Settings persist across restarts (`%AppData%\Correntra\Downloader\
+  desktop-settings.json`). Previously only theme and language survived a
+  relaunch; every other option silently reset.
+- "Şimdi denetle" button is wired up and reports the check result inline;
+  the settings page shows the real assembly version instead of a hardcoded
+  string.
+- Category extension lists expanded (video: flv/f4v/ogv/asf/vob/divx/mxf,
+  music: mka/amr, compressed: zst/lz4/cab/jar/br, documents:
+  odp/ods/docm/xlsm/xlsb/xps/fb2/djvu, programs: msu/msp/appinstaller).
 - `scripts/test-media-e2e.ps1`: posts a real yt-dlp-backed job over the
   loopback bridge (`media/start` → `confirm` → poll) so the "download never
   starts" class of bugs is reproducible end to end.
+
+### Removed
+- The "Güncelleme kanalı" dropdown. Stable vs pre-release is already covered
+  by the plain-language "Ön sürümleri göster" switch; normal users should not
+  have to pick a channel.
 
 ## 0.3.0 — 2026-08-19
 

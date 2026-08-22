@@ -508,7 +508,8 @@ public partial class MainViewModel : ViewModelBase
     private static string ToStateKey(DownloadJobState state) => state switch
     {
         DownloadJobState.Completed => "State.Completed",
-        DownloadJobState.Downloading or DownloadJobState.Probing or DownloadJobState.Verifying or DownloadJobState.Finalizing => "State.Downloading",
+        DownloadJobState.Finalizing => "State.Finalizing",
+        DownloadJobState.Downloading or DownloadJobState.Probing or DownloadJobState.Verifying => "State.Downloading",
         DownloadJobState.NeedsInput => "State.NeedsInput",
         DownloadJobState.Queued or DownloadJobState.Pending => "State.Queued",
         DownloadJobState.Paused => "State.Paused",
