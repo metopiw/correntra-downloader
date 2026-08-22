@@ -1,5 +1,7 @@
 # AGENTS.md — guidance for coding agents in this repository
 
+> **Communication:** Keep answers short (2-4 lines) unless user asks for detail. No code dumps unless requested.
+
 Correntra is an IDM-class download manager: Avalonia desktop shell
 (`src/Correntra.Desktop`), a background transfer agent
 (`src/Correntra.Agent`), a segmented HTTP engine (`src/Correntra.Transfer`),
