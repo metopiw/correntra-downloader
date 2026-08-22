@@ -658,6 +658,13 @@ public sealed class DownloadJobCoordinator : IAsyncDisposable
                 string message = result.Diagnostics.Length == 0
                     ? "The video engine could not download this media."
                     : "Video engine: " + RedactUrls(Tail(result.Diagnostics, 180));
+                if (LooksLikeSessionGate(result.Diagnostics))
+                {
+                    // Bot/age gates read like transport errors; surface the
+                    // one action that reliably unblocks the next attempt.
+                    message += " YouTube wants a signed-in session: close Chrome so Correntra can reuse its sign-in, then retry.";
+                }
+
                 await _repository.ChangeStateAsync(
                     job.Id,
                     NonTerminalStates,
@@ -724,6 +731,18 @@ public sealed class DownloadJobCoordinator : IAsyncDisposable
         string line = Tail(diagnostics).Trim();
         return line.Length <= maxChars ? line : line[..maxChars];
     }
+
+    /// <summary>
+    /// YouTube rejects stream downloads with bot/age gates that look like
+    /// transport errors; detect them so the failure message can point at the
+    /// actual remedy (a signed-in session from a closed-browser cookie read).
+    /// </summary>
+    private static bool LooksLikeSessionGate(string diagnostics) =>
+        diagnostics.Contains("Sign in to confirm", StringComparison.OrdinalIgnoreCase) ||
+        diagnostics.Contains("not a bot", StringComparison.OrdinalIgnoreCase) ||
+        diagnostics.Contains("age-restricted", StringComparison.OrdinalIgnoreCase) ||
+        diagnostics.Contains("confirm your age", StringComparison.OrdinalIgnoreCase) ||
+        diagnostics.Contains("HTTP Error 403", StringComparison.OrdinalIgnoreCase);
 
     /// <summary>Strips query strings (signed tokens) from URLs in diagnostics.</summary>
     private static string RedactUrls(string text) =>

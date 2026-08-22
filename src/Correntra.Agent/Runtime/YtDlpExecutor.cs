@@ -28,6 +28,14 @@ public sealed partial class YtDlpExecutor
     public const string FormatHeader = "X-Correntra-Format";
 
     private const int MaximumDiagnosticCharacters = 64 * 1024;
+
+    /// <summary>
+    /// Cookie sources tried in order before the anonymous pass. Chrome locks
+    /// its cookie database while it is running (yt-dlp #7271), so later
+    /// browser profiles or the anonymous pass must still get a chance;
+    /// YouTube bot-gates stream downloads when no valid session exists.
+    /// </summary>
+    private static readonly string[] CookieBrowserChain = ["chrome", "edge", "firefox"];
     private static readonly string[] SupportedDomains =
     [
         "youtube.com",
@@ -186,23 +194,7 @@ public sealed partial class YtDlpExecutor
         ArgumentException.ThrowIfNullOrWhiteSpace(url);
         string executable = RequireExecutable();
 
-        string json;
-        try
-        {
-            json = await RunCaptureAsync(
-                executable,
-                BuildEnumerateArguments(url, withCookies: true),
-                cancellationToken).ConfigureAwait(false);
-        }
-        catch (InvalidOperationException)
-        {
-            // Cookie extraction can fail (browser missing/locked); the
-            // anonymous pass still works for most public videos.
-            json = await RunCaptureAsync(
-                executable,
-                BuildEnumerateArguments(url, withCookies: false),
-                cancellationToken).ConfigureAwait(false);
-        }
+        string json = await CaptureWithCookieChainAsync(executable, url, cancellationToken).ConfigureAwait(false);
 
         using JsonDocument document = JsonDocument.Parse(json);
         JsonElement root = document.RootElement;
@@ -259,15 +251,47 @@ public sealed partial class YtDlpExecutor
         return new YtDlpInfo(title, options);
     }
 
-    private static List<string> BuildEnumerateArguments(string url, bool withCookies)
+    /// <summary>
+    /// Probes metadata once per cookie source. A locked or missing browser
+    /// profile fails in about a second and moves the chain forward; only the
+    /// final anonymous failure propagates to the caller.
+    /// </summary>
+    private static async Task<string> CaptureWithCookieChainAsync(
+        string executable,
+        string url,
+        CancellationToken cancellationToken)
+    {
+        foreach (string browser in CookieBrowserChain)
+        {
+            try
+            {
+                return await RunCaptureAsync(
+                    executable,
+                    BuildEnumerateArguments(url, cookieBrowser: browser),
+                    cancellationToken).ConfigureAwait(false);
+            }
+            catch (InvalidOperationException)
+            {
+                // Cookie extraction failed (browser running/missing); the
+                // next source or the anonymous pass takes over.
+            }
+        }
+
+        return await RunCaptureAsync(
+            executable,
+            BuildEnumerateArguments(url, cookieBrowser: null),
+            cancellationToken).ConfigureAwait(false);
+    }
+
+    private static List<string> BuildEnumerateArguments(string url, string? cookieBrowser)
     {
         var arguments = new List<string> { "--no-warnings", "-J", "--no-playlist", "--skip-download" };
-        if (withCookies)
+        if (cookieBrowser is not null)
         {
-            // Reusing the browser session defeats bot checks and unlocks
+            // Reusing a browser session defeats bot checks and unlocks
             // age-restricted or members-only uploads.
             arguments.Add("--cookies-from-browser");
-            arguments.Add("chrome");
+            arguments.Add(cookieBrowser);
         }
 
         arguments.Add("--");
@@ -276,8 +300,10 @@ public sealed partial class YtDlpExecutor
     }
 
     /// <summary>
-    /// Downloads the media to <paramref name="outputPath"/>. yt-dlp writes the
-    /// file directly (no .part), so interrupted runs can simply be restarted.
+    /// Downloads the media to <paramref name="outputPath"/>. Each cookie
+    /// source is tried in turn (locked profiles fail fast), then an anonymous
+    /// pass; yt-dlp writes the file directly (no .part), so interrupted runs
+    /// can simply be restarted.
     /// </summary>
     public async Task<YtDlpDownloadResult> DownloadAsync(
         string url,
@@ -293,16 +319,29 @@ public sealed partial class YtDlpExecutor
         Directory.CreateDirectory(Path.GetDirectoryName(outputPath)!);
 
         YtDlpDownloadResult result = await RunDownloadAsync(
-            BuildDownloadArguments(url, formatSelector, outputPath, headers, withCookies: true),
+            BuildDownloadArguments(url, formatSelector, outputPath, headers, CookieBrowserChain[0]),
             outputPath,
             onProgress,
             cancellationToken).ConfigureAwait(false);
         if (!result.Succeeded)
         {
-            // Cookie extraction or a cookie-gated path can fail; retry the
-            // whole transfer anonymously before reporting a hard failure.
+            foreach (string browser in CookieBrowserChain.Skip(1))
+            {
+                result = await RunDownloadAsync(
+                    BuildDownloadArguments(url, formatSelector, outputPath, headers, browser),
+                    outputPath,
+                    onProgress,
+                    cancellationToken).ConfigureAwait(false);
+                if (result.Succeeded)
+                {
+                    return result;
+                }
+            }
+
+            // Anonymous pass: every session source above was locked, missing
+            // or rejected; this is what keeps public downloads alive.
             result = await RunDownloadAsync(
-                BuildDownloadArguments(url, formatSelector, outputPath, headers, withCookies: false),
+                BuildDownloadArguments(url, formatSelector, outputPath, headers, cookieBrowser: null),
                 outputPath,
                 onProgress,
                 cancellationToken).ConfigureAwait(false);
@@ -316,7 +355,7 @@ public sealed partial class YtDlpExecutor
         string? formatSelector,
         string outputPath,
         IReadOnlyDictionary<string, string>? headers,
-        bool withCookies)
+        string? cookieBrowser)
     {
         var arguments = new List<string>
         {
@@ -324,10 +363,10 @@ public sealed partial class YtDlpExecutor
             "--retries", "10", "--fragment-retries", "10",
             "--no-part", "-o", outputPath,
         };
-        if (withCookies)
+        if (cookieBrowser is not null)
         {
             arguments.Add("--cookies-from-browser");
-            arguments.Add("chrome");
+            arguments.Add(cookieBrowser);
         }
 
         string? ffmpegLocation = ResolveFfmpegLocation();

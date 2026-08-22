@@ -2,6 +2,25 @@
 
 All notable changes to Correntra Downloader are recorded here. Dates are UTC.
 
+## 0.3.1 — 2026-08-22
+
+### Fixed
+- Media jobs from the extension died at 0% with "unable to download video
+  data: HTTP Error 403": the bundled yt-dlp sidecar had gone stale and
+  YouTube rejects its anonymous stream URLs. The vendored binary is refreshed
+  (2026.08.19); refresh it again any time with `scripts/get-yt-dlp.ps1 -Force`.
+- The cookie pass no longer depends on Chrome alone. Chrome keeps its cookie
+  database exclusively locked while running (yt-dlp #7271), which made the
+  first pass fail on most sessions; enumeration and downloads now fall back
+  through edge → firefox before the anonymous attempt.
+- Bot-check / age-gate / HTTP 403 rejections surface an actionable failure
+  message instead of a bare transport error.
+
+### Added
+- `scripts/test-media-e2e.ps1`: posts a real yt-dlp-backed job over the
+  loopback bridge (`media/start` → `confirm` → poll) so the "download never
+  starts" class of bugs is reproducible end to end.
+
 ## 0.3.0 — 2026-08-19
 
 ### Added
