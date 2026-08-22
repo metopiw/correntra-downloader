@@ -175,7 +175,7 @@ public sealed class TransferSettings
 {
     public TransferSettings(
         int maxConcurrentDownloads = 4,
-        int maxSegmentsPerDownload = 16,
+        int maxSegmentsPerDownload = 8,
         int retryCount = 8,
         TimeSpan? retryBaseDelay = null,
         TimeSpan? requestTimeout = null,

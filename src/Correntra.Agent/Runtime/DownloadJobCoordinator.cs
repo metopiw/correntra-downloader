@@ -1,5 +1,6 @@
 using System.Collections.Concurrent;
 using System.Diagnostics;
+using System.Text.Json;
 using System.Threading.Channels;
 using Correntra.Core;
 using Correntra.Core.Downloads;
@@ -410,6 +411,7 @@ public sealed class DownloadJobCoordinator : IAsyncDisposable
                 Overwrite = false,
                 PauseToken = pauseController.Token,
                 Progress = progress,
+                MaxSegments = GetConfiguredMaxSegments(),
             };
             DownloadResult result = await _transferEngine.DownloadAsync(request, cancellation.Token).ConfigureAwait(false);
             await _repository.UpdateProgressAsync(
@@ -944,6 +946,27 @@ public sealed class DownloadJobCoordinator : IAsyncDisposable
             _ => "The download could not be completed.",
         };
         return message;
+    }
+
+    private static int GetConfiguredMaxSegments()
+    {
+        try
+        {
+            string path = Path.Combine(
+                Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
+                "Correntra",
+                "Downloader",
+                "desktop-settings.json");
+            if (!File.Exists(path)) return 8;
+            string json = File.ReadAllText(path);
+            using JsonDocument doc = JsonDocument.Parse(json);
+            if (doc.RootElement.TryGetProperty("SegmentsPerDownload", out JsonElement el) &&
+                el.TryGetInt32(out int v) && v >= 1 && v <= 32) return v;
+            if (doc.RootElement.TryGetProperty("segmentsPerDownload", out JsonElement el2) &&
+                el2.TryGetInt32(out int v2) && v2 >= 1 && v2 <= 32) return v2;
+        }
+        catch (Exception ex) when (ex is IOException or JsonException or UnauthorizedAccessException) { }
+        return 8;
     }
 
     private void SignalScheduler() => _scheduleSignals.Writer.TryWrite(true);

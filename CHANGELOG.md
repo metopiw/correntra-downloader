@@ -2,6 +2,63 @@
 
 All notable changes to Correntra Downloader are recorded here. Dates are UTC.
 
+## 0.3.5 — 2026-08-22
+
+### Fixed
+- **Download speed capped at ~1 MB/s (IDM uses 8, Correntra used 32)**:
+  32 parallel range requests trigger `429 Too Many Requests` on many
+  hosts (verified on `ash-speed.hetzner.com`: 1 segment = 3.46 MB/s,
+  32 segments = 1.12 MB/s). The engine now defaults to **8 segments**
+  (IDM default) and the Settings slider (`Ayarlar → Segment`) is actually
+  wired — `DownloadJobCoordinator` reads `desktop-settings.json` so the
+  chosen 1…32 value is honoured. No engine rewrite needed; the transfer
+  core was already tuned for full bandwidth (256 KiB buffers, HTTP/2
+  multiplexing, checkpoint throttling).
+
+## 0.3.4 — 2026-08-22
+
+### Fixed
+- **Browser download takeover rebuilt from scratch (IDM-style)** — the old
+  `downloads.onCreated`-only flow was fragile in MV3 (service worker could
+  be reclaimed mid-ping, so `pause()` never ran and fast servers finished
+  in Chrome before `cancel()` could fire). The extension now uses two
+  independent layers: (1) a content-script click interceptor for obvious
+  file links (`.bin/.zip/.exe/…` or `[download]`) that offers the URL to
+  the agent *before* a DownloadItem exists, and (2) a hardened
+  `onCreated` + `onDeterminingFilename` path that pauses first, keeps the
+  worker alive with an alarm, and only resumes when Correntra truly cannot
+  accept the download. The screenshot's "12 MB / 100 MB still in Chrome"
+  case no longer occurs.
+- Keepalive: an `alarms`-based heartbeat holds the MV3 service worker
+  alive for the full takeover window; previously the worker could die
+  during the 2 s ping → post window.
+
+## 0.3.3 — 2026-08-22
+
+### Fixed
+- **Fast browser downloads escaped to Chrome before Correntra could take
+  over**: the extension pinged the agent *before* pausing Chrome's download,
+  so on fast servers (e.g. ash-speed.hetzner.com) the file could complete in
+  the browser during that window and `cancel()` became a no-op — Chrome saved
+  it while no hand-off was visible. The download is now paused first
+  (IDM-style), then handed off; it is resumed only when Correntra cannot
+  accept it.
+- A completed-in-Chrome race is detected explicitly: an already-finished
+  download is no longer re-downloaded by the agent; it is reported as
+  "Chrome had already finished it" instead.
+- The agent health check used a single 700 ms attempt, which cold MV3 service
+  workers could miss even with the agent healthy — that silently dropped the
+  takeover back to Chrome's own downloader. It now retries once with a 2 s
+  budget.
+
+### Added
+- **Capture diagnostics**: every download event outcome is stored and shown
+  in the popup ("✓ handed to Correntra" / "Correntra unreachable — Chrome
+  kept it" / rejected / capture switch off), so a fall-through is explained
+  instead of silent.
+- Toolbar badge feedback: green ✓ when a download is captured, red ! when
+  the browser keeps it.
+
 ## 0.3.2 — 2026-08-22
 
 ### Fixed

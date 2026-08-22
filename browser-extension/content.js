@@ -464,3 +464,39 @@ chrome.storage.onChanged.addListener((changes, area) => {
   closeMenu();
   sync();
 });
+
+// ---------------------------------------------------------------------------
+// Layer 1 — link click interceptor (before DownloadItem even exists).
+// Catches left-clicks on obvious file links (.bin/.zip/.exe/… or [download])
+// and offers the URL to the agent directly. If the agent accepts, the
+// navigation is suppressed and Correntra shows its confirmation dialog.
+// Otherwise we fall back to normal browser navigation so the downloads API
+// (layer 2) can still catch Content-Disposition / other cases.
+// ---------------------------------------------------------------------------
+const DOWNLOAD_EXT_RE = /\.(bin|zip|rar|7z|tar|gz|bz2|xz|zst|lz4|exe|msi|dmg|iso|img|apk|jar|pdf|docx?|xlsx?|pptx?|csv|psd|mp4|mkv|avi|mov|flv|webm|m4a|mp3|wav|flac|ogg|opus)(\?|#|$)/i;
+function isDownloadCandidate(anchor, url) {
+  if (anchor.hasAttribute("download")) return true;
+  const clean = String(url).split("?")[0].split("#")[0].toLowerCase();
+  return DOWNLOAD_EXT_RE.test(clean);
+}
+document.addEventListener("click", (event) => {
+  if (!enabled) return;
+  if (event.defaultPrevented) return;
+  if (event.button !== 0) return;
+  if (event.ctrlKey || event.metaKey || event.shiftKey || event.altKey) return;
+  const anchor = event.target && event.target.closest ? event.target.closest("a[href]") : null;
+  if (!anchor) return;
+  const href = anchor.href;
+  if (!isHttp(href)) return;
+  if (!isDownloadCandidate(anchor, href)) return;
+  event.preventDefault();
+  event.stopPropagation();
+  if (typeof event.stopImmediatePropagation === "function") event.stopImmediatePropagation();
+  void (async () => {
+    const res = await send({ type: "correntra.takeoverUrl", url: href, pageUrl: location.href, referrer: document.referrer || location.href });
+    if (res && res.accepted) return;
+    // Agent didn't take it — fall back to browser. Using location keeps
+    // referrer/cookies intact and still triggers the downloads API fallback.
+    window.location.href = href;
+  })();
+}, true);

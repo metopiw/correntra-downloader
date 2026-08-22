@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <style>
-    body { font: 13px/1.35 "Segoe UI", Tahoma, sans-serif; margin: 12px 14px; width: 220px; color: #222; }
+    body { font: 13px/1.35 "Segoe UI", Tahoma, sans-serif; margin: 12px 14px; width: 240px; color: #222; }
     label { display: flex; gap: 8px; align-items: center; cursor: pointer; }
     p { margin: 10px 0 0; color: #666; font-size: 11px; }
     #status { margin-top: 8px; font-size: 11px; display: flex; gap: 6px; align-items: center; }
@@ -12,6 +12,11 @@
     #status.offline .dot { background: #d43a3a; }
     #status.online { color: #1a7a4a; }
     #status.offline { color: #a33; }
+    #lastCapture { margin-top: 10px; font-size: 11px; padding-top: 8px; border-top: 1px solid #e3e3e3; word-break: break-word; }
+    #lastCapture.ok { color: #1a7a4a; }
+    #lastCapture.warn { color: #b06c00; }
+    #lastCapture.err { color: #a33; }
+    #lastCapture .when { color: #999; display: block; margin-top: 2px; }
   </style>
 </head>
 <body>
@@ -20,6 +25,7 @@
     <span id="label">Capture downloads &amp; videos</span>
   </label>
   <div id="status"><span class="dot"></span><span id="statusText">Checking Correntra…</span></div>
+  <div id="lastCapture" hidden><span id="lastCaptureText"></span><span class="when" id="lastCaptureWhen"></span></div>
   <p id="hint">Agent must be running on this PC.</p>
   <script src="popup.js"></script>
 </body>

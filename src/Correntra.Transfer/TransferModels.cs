@@ -21,7 +21,7 @@ public sealed record DownloadRequest
     public IReadOnlyDictionary<string, string> Headers { get; init; } =
         new ReadOnlyDictionary<string, string>(new Dictionary<string, string>());
 
-    public int MaxSegments { get; init; } = 32;
+    public int MaxSegments { get; init; } = 8;
 
     public long MinimumSegmentSizeBytes { get; init; } = 2 * 1024 * 1024;
 

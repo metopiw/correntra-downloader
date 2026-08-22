@@ -11,7 +11,7 @@
     <Company>Correntra</Company>
     <Authors>Correntra</Authors>
     <Copyright>Copyright (c) 2026 Correntra. All rights reserved.</Copyright>
-    <VersionPrefix>0.3.2</VersionPrefix>
+    <VersionPrefix>0.3.5</VersionPrefix>
     <WindowsSdkPackageVersion Condition="$([MSBuild]::IsOSPlatform('Windows'))">10.0.17763.56</WindowsSdkPackageVersion>
   </PropertyGroup>
 

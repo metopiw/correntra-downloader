@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Correntra Catch",
-  "version": "0.3.0",
+  "version": "0.3.5",
   "description": "Hand Chrome downloads and page videos to Correntra, IDM-style.",
   "action": {
     "default_title": "Correntra Catch",
@@ -10,7 +10,7 @@
   },
   "icons": { "128": "icons/icon128.png" },
   "background": { "service_worker": "background.js" },
-  "permissions": ["downloads", "storage", "webRequest"],
+  "permissions": ["downloads", "storage", "webRequest", "alarms"],
   "host_permissions": ["http://*/*", "https://*/*", "http://127.0.0.1:27410/*"],
   "content_scripts": [
     {
