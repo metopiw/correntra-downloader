@@ -7,6 +7,7 @@ using Correntra.Core.Ipc;
 using Correntra.Core.Security;
 using Correntra.Media.Models;
 using Correntra.Media.Resolution;
+using Correntra.Media.Sites;
 
 namespace Correntra.Agent.Runtime;
 
@@ -155,11 +156,28 @@ public sealed partial class AgentCommandDispatcher
                         AgentVersion,
                         mediaQualities: options);
                 }
+
+                return AgentResponseEnvelope.Rejected(request.RequestId, "media-resolve-failed", AgentVersion);
             }
             catch (Exception exception) when (
                 exception is InvalidOperationException or HttpRequestException or JsonException or IOException)
             {
-                // Fall back to the manifest-based resolver below.
+                // The manifest resolver below only understands real media files
+                // and manifests. Falling back with an HTML watch page produced a
+                // bogus descriptor whose variants were all filtered out, so the
+                // extension read an accepted-but-empty reply as "Kalite
+                // bulunamadı" instead of the actual extraction failure.
+                // Sniffed CDN URLs (.m3u8/.mp4 fragments) stay fallback-eligible
+                // because the manifest itself is genuinely fetchable there.
+                bool sourceIsFetchableMedia = YtDlpExecutor.LooksLikeDirectMedia(source) ||
+                    GoogleVideoUrlParser.IsGoogleVideo(source);
+                if (!sourceIsFetchableMedia)
+                {
+                    return AgentResponseEnvelope.Rejected(
+                        request.RequestId,
+                        MapEnumerationFailure(exception),
+                        AgentVersion);
+                }
             }
         }
 
@@ -233,11 +251,79 @@ public sealed partial class AgentCommandDispatcher
                 : "Original";
     }
 
+    /// <summary>
+    /// Translates the most common yt-dlp extraction failures into bridge
+    /// reasons the extension can explain. Instagram answers login-walled posts
+    /// with an opaque "empty media response" and X throttles guest tokens with
+    /// HTTP 429; both previously surfaced as a generic failure.
+    /// </summary>
+    internal static string MapEnumerationFailure(Exception exception)
+    {
+        string message = exception.Message;
+        if (message.Contains("empty media response", StringComparison.OrdinalIgnoreCase) ||
+            message.Contains("--cookies-from-browser", StringComparison.OrdinalIgnoreCase) ||
+            message.Contains("pass cookies", StringComparison.OrdinalIgnoreCase) ||
+            message.Contains("log in", StringComparison.OrdinalIgnoreCase) ||
+            message.Contains("login", StringComparison.OrdinalIgnoreCase) ||
+            message.Contains("sign in", StringComparison.OrdinalIgnoreCase) ||
+            message.Contains("authentication", StringComparison.OrdinalIgnoreCase) ||
+            message.Contains("age-restricted", StringComparison.OrdinalIgnoreCase) ||
+            message.Contains("members-only", StringComparison.OrdinalIgnoreCase) ||
+            message.Contains("private video", StringComparison.OrdinalIgnoreCase))
+        {
+            return "media-login-required";
+        }
+
+        if (message.Contains("429", StringComparison.Ordinal) ||
+            message.Contains("rate limit", StringComparison.OrdinalIgnoreCase) ||
+            message.Contains("too many requests", StringComparison.OrdinalIgnoreCase))
+        {
+            return "media-rate-limited";
+        }
+
+        return "media-resolve-failed";
+    }
+
     private Uri? SelectYtDlpTarget(Uri source, Uri? pageUrl)
     {
         if (!_ytDlpExecutor.IsAvailable || !YtDlpExecutor.ShouldExtractWithYtDlp(source, pageUrl))
         {
             return null;
+        }
+
+        // Feed vs permalink: the overlay used to send the generic feed URL as
+        // pageUrl while the real post lives at /reels/<id> etc. On Instagram's
+        // main feed location.href is https://www.instagram.com/ but the video's
+        // permalink is https://www.instagram.com/reels/<id>/ — picking the
+        // feed fails extraction with "Liste alınamadı" while the permalink
+        // succeeds. Prefer the more specific post permalink when one side is a
+        // post and the other is a feed/homepage.
+        if (pageUrl is not null &&
+            YtDlpExecutor.IsSupportedHost(pageUrl) &&
+            YtDlpExecutor.IsSupportedHost(source))
+        {
+            bool sourceIsPost = IsPostPermalink(source);
+            bool pageIsPost = IsPostPermalink(pageUrl);
+            if (sourceIsPost && !pageIsPost)
+            {
+                return source;
+            }
+
+            if (!sourceIsPost && pageIsPost)
+            {
+                return pageUrl;
+            }
+
+            // Both posts or both generic: prefer the longer, more specific path.
+            if (source.AbsolutePath.Length > pageUrl.AbsolutePath.Length + 8)
+            {
+                return source;
+            }
+
+            if (pageUrl.AbsolutePath.Length > source.AbsolutePath.Length + 8)
+            {
+                return pageUrl;
+            }
         }
 
         if (pageUrl is not null &&
@@ -249,6 +335,17 @@ public sealed partial class AgentCommandDispatcher
         }
 
         return YtDlpExecutor.IsSupportedHost(source) ? source : pageUrl ?? source;
+    }
+
+    private static bool IsPostPermalink(Uri uri)
+    {
+        string path = uri.AbsolutePath;
+        if (path.Length <= 1)
+        {
+            return false;
+        }
+
+        return PostPermalinkPattern().IsMatch(path);
     }
 
     private async Task<AgentResponseEnvelope> CreateFromMediaAsync(
@@ -615,4 +712,7 @@ public sealed partial class AgentCommandDispatcher
 
     [GeneratedRegex(@"^[A-Za-z0-9+\[\]().,_<=/-]{1,220}$", RegexOptions.CultureInvariant)]
     private static partial Regex FormatSelectorRegex();
+
+    [GeneratedRegex(@"/(p|reels?|tv|shorts)/[A-Za-z0-9_-]+|/[^/]+/status/\d+|/i/status/\d+|/@[^/]+/video/\d+|/(reel|watch)/", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant)]
+    private static partial Regex PostPermalinkPattern();
 }

@@ -2,6 +2,51 @@
 
 All notable changes to Correntra Downloader are recorded here. Dates are UTC.
 
+## 0.3.9 — 2026-08-23
+
+### Fixed
+- **Instagram/Twitter "Kalite bulunamadı" hid the real error**: when yt-dlp
+  extraction failed on a watch page (login-walled reels, throttled guest
+  tokens), the agent silently fell back to the manifest resolver, which
+  treated the HTML page as a "direct" media file and answered accepted with
+  an empty quality list. The bridge now rejects with the mapped reason:
+  `media-login-required` ("Oturum gerekli — sitede giriş yapın" in the
+  overlay), `media-rate-limited`, or the generic failure — verified live:
+  public reels still list qualities, login-walled ones explain why not.
+- **Downloads whose target file already existed failed forever at 0 bytes**
+  with "The file could not be written": the engine refuses to overwrite
+  (by design) but nothing picked a new name, so re-takeovers of e.g.
+  `yt-dlp.exe` burned all 5 retries. The coordinator now resolves
+  IDM-style "name (2).ext" collisions before starting HTTP, HLS/DASH and
+  yt-dlp transfers and persists the renamed file. Verified end to end:
+  takeover with `yt-dlp.exe` present completes as `yt-dlp (2).exe`,
+  state 9.
+- **Cookie-race losers piled up as orphaned yt-dlp processes** after each
+  quality lookup; stacked clicks tripped rate limits that made even the
+  anonymous probe fail. Losing probes are now killed the moment one wins.
+- **Bridge hardening (security scan)**: `/ping`, `/jobs`, `/takeover`,
+  `/confirm`, `/media/*` now also require a `Host` header of
+  `127.0.0.1:27410`/`localhost:27410`, closing the DNS-rebinding residue
+  the Origin allow-list could not cover. Scan otherwise clean: loopback
+  bind, chrome-extension-only CORS, 128 KB body cap, parameterized SQL,
+  `SafePath`/`HttpHeaderSet` validation at IPC boundaries, `ArgumentList`
+  process spawning (no shell), current-user-only named pipes, extension
+  UI confined to a closed ShadowRoot without HTML sinks.
+- **Instagram feed "Liste alınamadı" but permalink worked** — on
+  `instagram.com` ana sayfa the overlay sent `location.href`
+  (`https://www.instagram.com/`, the feed) to yt-dlp instead of the post's
+  permalink (`/reels/DcJYsBEAWd0/` — status bar'da görünen link). Feed'i
+  extract edemeyince "Liste alınamadı" gösteriyordu; aynı videoya tıklayıp
+  `/reels/...` sayfasına gidince `location.href` permalink olduğu için
+  çalışıyordu (senin bulduğun bug, resimlerde net). `content.js` artık
+  videonun kapsayan `<article>`'ındaki gerçek post linkini (`/p/`, `/reel`,
+  `/reels/`, `/tv/`, `.../status/...`) bulup hem `url` hem `pageUrl` olarak
+  gönderiyor; `AgentCommandDispatcher.SelectYtDlpTarget` da feed vs permalink
+  arasında daha spesifik olanı tercih edecek şekilde sertleştirildi. Senin
+  `DcJYsBEAWd0` reel'i ile canlı doğrulandı: feed payload `media-resolve-
+  failed`, permalink payload `ACCEPTED 1280p/960p/640p`, mixed durumda da
+  server doğru olanı seçiyor — artık ana sayfadan da indirilebilecek.
+
 ## 0.3.8 — 2026-08-22
 
 ### Fixed

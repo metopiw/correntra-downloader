@@ -15,7 +15,7 @@ public partial class UpdateToastWindow : Window
 {
     private readonly TaskCompletionSource<bool> completion = new(TaskCreationOptions.RunContinuationsAsynchronously);
 
-    private UpdateToastWindow()
+    public UpdateToastWindow()
     {
         InitializeComponent();
         LocalizationService localizer = LocalizationService.Current;

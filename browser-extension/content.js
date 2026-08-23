@@ -74,6 +74,7 @@ function text(kind, key) {
     down: "Correntra çalışmıyor",
     drm: "Korumalı içerik",
     fail: "Liste alınamadı",
+    login: "Oturum gerekli — sitede giriş yapın",
     sending: "Correntra’ya gönderiliyor…",
   };
   const en = {
@@ -83,6 +84,7 @@ function text(kind, key) {
     down: "Correntra is not running",
     drm: "Protected media",
     fail: "Could not list qualities",
+    login: "Sign-in required on this site",
     sending: "Sending to Correntra…",
   };
   return (turkish ? tr : en)[key];
@@ -109,6 +111,56 @@ function isFragment(url) {
 
 function looksDirect(url) {
   return /\.(mp4|webm|mkv|mov|m4v|m3u8|mpd|m4a|mp3|aac|ogg|opus|flac)(\?|#|$)/i.test(url.split("?")[0]);
+}
+
+function isPostPermalink(href) {
+  try {
+    const u = new URL(href, location.href);
+    const path = u.pathname;
+    if (/\/(p|reels?|tv)\/[A-Za-z0-9_-]+\/?/i.test(path)) return true;
+    if (/\/[^\/]+\/status\/\d+/i.test(path) || /\/i\/status\/\d+/i.test(path)) return true;
+    if (/\/@[^\/]+\/video\/\d+/i.test(path) || /\/video\/\d+/i.test(path)) return true;
+    if (/\/(reel|watch|videos?)\//i.test(path)) return true;
+    return false;
+  } catch {
+    return false;
+  }
+}
+
+function findPostUrl(element) {
+  // 1) Anchor that directly wraps the video
+  try {
+    const direct = element.closest ? element.closest("a[href]") : null;
+    if (direct && isHttp(direct.href) && isPostPermalink(direct.href)) {
+      return direct.href;
+    }
+  } catch {}
+  // 2) Enclosing article / tweet container
+  const container = element.closest
+    ? (element.closest("article") || element.closest('[role="article"]') || element.closest('[data-testid="cellInnerDiv"]') || element.closest('[data-testid="tweet"]'))
+    : null;
+  if (container) {
+    const anchors = container.querySelectorAll("a[href]");
+    for (const a of anchors) {
+      try {
+        if (!isHttp(a.href)) continue;
+        if (isPostPermalink(a.href)) return a.href;
+      } catch {}
+    }
+  }
+  // 3) Walk up a few levels and search inside each parent
+  let cur = element.parentElement;
+  for (let depth = 0; depth < 4 && cur; depth++) {
+    try {
+      const anchors = cur.querySelectorAll("a[href]");
+      for (const a of anchors) {
+        if (!isHttp(a.href)) continue;
+        if (isPostPermalink(a.href)) return a.href;
+      }
+    } catch {}
+    cur = cur.parentElement;
+  }
+  return null;
 }
 
 function send(payload) {
@@ -175,6 +227,10 @@ function isUsable(element) {
 }
 
 async function pickUrl(element) {
+  const permalink = findPostUrl(element);
+  if (permalink && isHttp(permalink)) {
+    return permalink;
+  }
   const src = element.currentSrc || element.src || "";
   if (isHttp(src) && looksDirect(src) && !isFragment(src)) {
     return src;
@@ -247,6 +303,9 @@ function reasonKey(reason) {
   if (reason === "drm-protected") {
     return "drm";
   }
+  if (reason === "media-login-required") {
+    return "login";
+  }
   return "fail";
 }
 
@@ -257,11 +316,14 @@ async function showQualities(overlay) {
   openMedia = overlay.element;
 
   const url = await pickUrl(overlay.element);
+  const permalink = findPostUrl(overlay.element);
+  const effectivePageUrl = permalink && isHttp(permalink) ? permalink : location.href;
   overlay.url = url;
+  overlay.pageUrl = effectivePageUrl;
   const payload = {
     type: "correntra.resolve",
     url,
-    pageUrl: location.href,
+    pageUrl: effectivePageUrl,
     referrer: document.referrer || location.href,
     title: pageTitle(),
     candidateId: overlay.candidateId,
@@ -305,7 +367,7 @@ async function startQuality(overlay, quality) {
   const result = await send({
     type: "correntra.start",
     url: overlay.url || location.href,
-    pageUrl: location.href,
+    pageUrl: overlay.pageUrl || location.href,
     referrer: document.referrer || location.href,
     title: pageTitle(),
     candidateId: overlay.candidateId,

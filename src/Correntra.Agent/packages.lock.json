@@ -346,7 +346,7 @@
       "correntra.infrastructure": {
         "type": "Project",
         "dependencies": {
-          "Correntra.Core": "[0.1.0, )",
+          "Correntra.Core": "[0.3.8, )",
           "Microsoft.Data.Sqlite": "[8.0.30, )",
           "Microsoft.Extensions.Hosting": "[8.0.1, )",
           "Microsoft.Extensions.Logging.Console": "[8.0.1, )"
@@ -355,21 +355,21 @@
       "correntra.media": {
         "type": "Project",
         "dependencies": {
-          "Correntra.Core": "[0.1.0, )",
-          "Correntra.Transfer": "[0.1.0, )"
+          "Correntra.Core": "[0.3.8, )",
+          "Correntra.Transfer": "[0.3.8, )"
         }
       },
       "correntra.platform.windows": {
         "type": "Project",
         "dependencies": {
-          "Correntra.Core": "[0.1.0, )",
+          "Correntra.Core": "[0.3.8, )",
           "System.Security.Cryptography.ProtectedData": "[8.0.0, )"
         }
       },
       "correntra.transfer": {
         "type": "Project",
         "dependencies": {
-          "Correntra.Core": "[0.1.0, )",
+          "Correntra.Core": "[0.3.8, )",
           "System.IO.Hashing": "[8.0.0, )"
         }
       },

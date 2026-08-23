@@ -85,6 +85,41 @@ public sealed class AgentCommandDispatcherTests
         Assert.Equal(DownloadExecutionIntent.Hold, job.ExecutionIntent);
     }
 
+    [Fact]
+    public async Task MediaResolveOnWatchPageRejectsWithReasonInsteadOfEmptyQualities()
+    {
+        await using var fixture = new FailingYtDlpFixture();
+        await fixture.InitializeAsync();
+        AgentRequestEnvelope request = CreateRequest(
+            "media.resolve",
+            new
+            {
+                url = "https://www.instagram.com/reel/abc123/",
+                pageUrl = "https://www.instagram.com/reel/abc123/",
+                candidateId = "c_1234567890123456789012",
+            });
+
+        AgentResponseEnvelope response = await fixture.Dispatcher.DispatchAsync(request);
+
+        // A failing extraction on a watch page must surface as a rejection.
+        // The old fallback resolved the HTML page as a "direct" media file and
+        // answered accepted with an empty quality list, which the extension
+        // rendered as "Kalite bulunamadı".
+        Assert.False(response.Payload.Accepted);
+        Assert.Equal("media-resolve-failed", response.Payload.Reason);
+        Assert.Null(response.Payload.MediaQualities);
+    }
+
+    [Theory]
+    [InlineData("yt-dlp could not read this media: ERROR: [Instagram] 123: Instagram sent an empty media response.", "media-login-required")]
+    [InlineData("yt-dlp could not read this media: ERROR: This video is private. Use --cookies-from-browser for authentication", "media-login-required")]
+    [InlineData("yt-dlp could not read this media: ERROR: HTTP Error 429: Too Many Requests", "media-rate-limited")]
+    [InlineData("yt-dlp could not read this media: ERROR: unable to download video data: HTTP Error 403: Forbidden", "media-resolve-failed")]
+    public void MapEnumerationFailureClassifiesKnownExtractorErrors(string message, string expected)
+    {
+        Assert.Equal(expected, AgentCommandDispatcher.MapEnumerationFailure(new InvalidOperationException(message)));
+    }
+
     private static AgentRequestEnvelope CreateRequest(string kind, object payload)
     {
         using JsonDocument document = JsonDocument.Parse(JsonSerializer.Serialize(payload));
@@ -111,6 +146,51 @@ public sealed class AgentCommandDispatcherTests
         public DownloadJobCoordinator Coordinator { get; }
 
         public RecordingDesktopLauncher DesktopLauncher { get; }
+
+        public AgentCommandDispatcher Dispatcher { get; }
+
+        public Task InitializeAsync() => Coordinator.InitializeAsync();
+
+        public async ValueTask DisposeAsync()
+        {
+            await Coordinator.DisposeAsync();
+            SqliteConnection.ClearAllPools();
+            if (Directory.Exists(_root))
+            {
+                Directory.Delete(_root, recursive: true);
+            }
+        }
+    }
+
+    /// <summary>
+    /// Dispatcher wired to a stand-in yt-dlp binary that always exits
+    /// non-zero, so media.resolve takes the extraction-failure path without
+    /// touching the network.
+    /// </summary>
+    private sealed class FailingYtDlpFixture : IAsyncDisposable
+    {
+        private readonly string _root = Path.Combine(
+            Path.GetTempPath(),
+            "Correntra.Integration.Tests",
+            Guid.NewGuid().ToString("N"));
+
+        public FailingYtDlpFixture()
+        {
+            var repository = new AgentJobRepository(
+                new CorrentraDatabase(Path.Combine(_root, "correntra.db")),
+                new PassthroughProtector());
+            Coordinator = new DownloadJobCoordinator(repository, new HttpTransferEngine(), 1);
+            string fakeYtDlp = Path.Combine(_root, "yt-dlp.exe");
+            File.Copy(Path.Combine(Environment.SystemDirectory, "cmd.exe"), fakeYtDlp);
+            // cmd.exe treats the yt-dlp arguments as command names, prints an
+            // error and exits non-zero: a deterministic extraction failure.
+            Dispatcher = new AgentCommandDispatcher(
+                Coordinator,
+                new RecordingDesktopLauncher(),
+                ytDlpExecutor: new YtDlpExecutor(fakeYtDlp));
+        }
+
+        public DownloadJobCoordinator Coordinator { get; }
 
         public AgentCommandDispatcher Dispatcher { get; }
 

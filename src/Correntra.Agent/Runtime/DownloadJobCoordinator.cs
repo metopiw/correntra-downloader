@@ -400,12 +400,18 @@ public sealed class DownloadJobCoordinator : IAsyncDisposable
 
             var progress = new InlineProgress<TransferProgress>(value => PersistProgress(job.Id, pauseController, value));
             string effectiveName = await ResolveEffectiveFileNameAsync(job, cancellation.Token).ConfigureAwait(false);
+            string destinationFile = ResolveCollisionFreeDestination(
+                Path.Combine(job.DestinationDirectory, effectiveName));
+            if (!string.Equals(destinationFile, Path.Combine(job.DestinationDirectory, effectiveName), StringComparison.Ordinal))
+            {
+                effectiveName = Path.GetFileName(destinationFile);
+            }
             if (!string.Equals(effectiveName, job.FileName, StringComparison.Ordinal))
             {
                 await _repository.UpdateFileNameAsync(job.Id, effectiveName, CancellationToken.None).ConfigureAwait(false);
             }
 
-            var request = new DownloadRequest(job.Source, Path.Combine(job.DestinationDirectory, effectiveName))
+            var request = new DownloadRequest(job.Source, destinationFile)
             {
                 Headers = job.Headers,
                 Overwrite = false,
@@ -478,7 +484,15 @@ public sealed class DownloadJobCoordinator : IAsyncDisposable
 
     private async Task RunMediaAsync(AgentJobRecord job, CancellationToken cancellationToken)
     {
-        string destination = job.DestinationPath;
+        string destination = ResolveCollisionFreeDestination(job.DestinationPath);
+        if (!string.Equals(destination, job.DestinationPath, StringComparison.Ordinal))
+        {
+            await _repository.UpdateFileNameAsync(
+                job.Id,
+                Path.GetFileName(destination),
+                CancellationToken.None).ConfigureAwait(false);
+        }
+
         try
         {
             await _repository.UpdateProgressAsync(
@@ -569,7 +583,18 @@ public sealed class DownloadJobCoordinator : IAsyncDisposable
 
     private async Task RunYtDlpAsync(AgentJobRecord job, CancellationToken cancellationToken)
     {
-        string destination = job.DestinationPath;
+        // yt-dlp skips existing targets ("has already been downloaded"), which
+        // would silently report the OLD file as the fresh download's result;
+        // move the target aside first.
+        string destination = ResolveCollisionFreeDestination(job.DestinationPath);
+        if (!string.Equals(destination, job.DestinationPath, StringComparison.Ordinal))
+        {
+            await _repository.UpdateFileNameAsync(
+                job.Id,
+                Path.GetFileName(destination),
+                CancellationToken.None).ConfigureAwait(false);
+        }
+
         try
         {
             await _repository.UpdateProgressAsync(
@@ -946,6 +971,34 @@ public sealed class DownloadJobCoordinator : IAsyncDisposable
             _ => "The download could not be completed.",
         };
         return message;
+    }
+
+    /// <summary>
+    /// IDM-style collision handling: a target file that already exists must
+    /// not abort the transfer (the engine refuses to overwrite, which read as
+    /// "The file could not be written" at 0 bytes on every retry), so pick
+    /// the next free "name (2).ext" slot like IDM does.
+    /// </summary>
+    private static string ResolveCollisionFreeDestination(string destinationPath)
+    {
+        if (!File.Exists(destinationPath))
+        {
+            return destinationPath;
+        }
+
+        string directory = Path.GetDirectoryName(destinationPath) ?? string.Empty;
+        string stem = Path.GetFileNameWithoutExtension(destinationPath);
+        string extension = Path.GetExtension(destinationPath);
+        for (int attempt = 2; attempt < 1000; attempt++)
+        {
+            string candidate = Path.Combine(directory, $"{stem} ({attempt}){extension}");
+            if (!File.Exists(candidate))
+            {
+                return candidate;
+            }
+        }
+
+        return destinationPath;
     }
 
     private static int GetConfiguredMaxSegments()

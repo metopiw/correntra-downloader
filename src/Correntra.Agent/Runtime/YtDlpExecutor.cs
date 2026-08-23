@@ -255,8 +255,11 @@ public sealed partial class YtDlpExecutor
     /// Probes metadata across all cookie sources IN PARALLEL and returns the
     /// first success (locked/missing profiles fail in ~1 s, so racing costs
     /// nothing and cuts the sequential ~10 s chain to the single slowest
-    /// probe). A transient JS challenge (TikTok "universal data") retries the
-    /// whole race once after a short delay.
+    /// probe). Losing probes are killed as soon as a winner exists — left
+    /// running they stack yt-dlp processes across clicks and sites such as
+    /// Instagram start rate-limiting every probe, including ones that would
+    /// succeed on their own. A transient JS challenge (TikTok "universal
+    /// data") retries the whole race once after a short delay.
     /// </summary>
     private static async Task<string> CaptureWithCookieChainAsync(
         string executable,
@@ -266,33 +269,52 @@ public sealed partial class YtDlpExecutor
         Exception? lastError = null;
         for (int attempt = 0; attempt < 2; attempt++)
         {
+            using var raceScope = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
             var probes = new List<Task<string>>();
             foreach (string browser in CookieBrowserChain)
             {
                 probes.Add(RunCaptureAsync(
                     executable,
                     BuildEnumerateArguments(url, cookieBrowser: browser),
-                    cancellationToken));
+                    raceScope.Token));
             }
             // Anonymous pass races too — it is the only source when every
             // browser profile is locked or lacks a session.
             probes.Add(RunCaptureAsync(
                 executable,
                 BuildEnumerateArguments(url, cookieBrowser: null),
-                cancellationToken));
+                raceScope.Token));
 
-            while (probes.Count > 0)
+            string? winner = null;
+            while (probes.Count > 0 && winner is null)
             {
                 Task<string> done = await Task.WhenAny(probes).ConfigureAwait(false);
                 probes.Remove(done);
                 try
                 {
-                    return await done.ConfigureAwait(false);
+                    winner = await done.ConfigureAwait(false);
                 }
                 catch (InvalidOperationException ex)
                 {
                     lastError = ex;
                 }
+            }
+
+            if (winner is not null)
+            {
+                raceScope.Cancel();
+                try
+                {
+                    await Task.WhenAll(probes).ConfigureAwait(false);
+                }
+                catch (Exception)
+                {
+                    // Losing probes fail with process-kill or probe errors by
+                    // design; their diagnostics are irrelevant once a winner
+                    // exists. Observed here so nothing surfaces unobserved.
+                }
+
+                return winner;
             }
 
             if (lastError is not null &&
@@ -532,27 +554,29 @@ public sealed partial class YtDlpExecutor
             throw new InvalidOperationException("The yt-dlp process could not be started.");
         }
 
-        Task<string> outputTask = process.StandardOutput.ReadToEndAsync(cancellationToken);
-        Task<string> errorTask = process.StandardError.ReadToEndAsync(cancellationToken);
-        try
-        {
-            await process.WaitForExitAsync(cancellationToken).ConfigureAwait(false);
-        }
-        catch (OperationCanceledException)
-        {
-            try
+        // Kill the process the moment the token fires; without this a
+        // cancelled probe lingers as an orphaned yt-dlp process while the
+        // race moves on (losers pile up across clicks and trigger
+        // rate-limiting on Instagram and similar sites).
+        using CancellationTokenRegistration killRegistration = cancellationToken.Register(
+            static state =>
             {
-                if (!process.HasExited)
+                try
                 {
-                    process.Kill(entireProcessTree: true);
+                    ((Process)state!).Kill(entireProcessTree: true);
                 }
-            }
-            catch (InvalidOperationException)
-            {
-            }
+                catch (Exception)
+                {
+                    // Already exited or inaccessible — nothing to do.
+                }
+            },
+            process);
 
-            throw;
-        }
+        Task<string> outputTask = process.StandardOutput.ReadToEndAsync(CancellationToken.None);
+        Task<string> errorTask = process.StandardError.ReadToEndAsync(CancellationToken.None);
+        // Cancellation kills via the registration above; this await simply
+        // observes it as OperationCanceledException.
+        await process.WaitForExitAsync(cancellationToken).ConfigureAwait(false);
 
         string output = await outputTask.ConfigureAwait(false);
         string error = await errorTask.ConfigureAwait(false);

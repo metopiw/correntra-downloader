@@ -107,6 +107,20 @@ public sealed class AgentLocalHttpServer
             return;
         }
 
+        // DNS-rebinding guard: a rebinding page resolves its own hostname to
+        // 127.0.0.1, but the request still carries the attacker's Host header;
+        // only the bridge's own loopback names are accepted. (The Origin rule
+        // above already blocks browser CSRF; this closes the residual gap for
+        // tooling that omits Origin.)
+        string? host = context.Request.Headers["Host"];
+        if (!string.Equals(host, "127.0.0.1:27410", StringComparison.OrdinalIgnoreCase) &&
+            !string.Equals(host, "localhost:27410", StringComparison.OrdinalIgnoreCase))
+        {
+            context.Response.StatusCode = 403;
+            context.Response.Close();
+            return;
+        }
+
         ApplyCors(context.Response, origin);
 
         string path = context.Request.Url?.AbsolutePath ?? "/";

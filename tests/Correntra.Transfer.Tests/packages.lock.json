@@ -121,7 +121,7 @@
       "correntra.transfer": {
         "type": "Project",
         "dependencies": {
-          "Correntra.Core": "[0.1.0, )",
+          "Correntra.Core": "[0.3.8, )",
           "System.IO.Hashing": "[8.0.0, )"
         }
       },
