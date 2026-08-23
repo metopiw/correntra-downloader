@@ -15,6 +15,7 @@ if ($Force -or -not (Test-Path -LiteralPath $exePath)) {
     # Prefer the latest stable release; the rolling "latest" asset is the
     # fallback so the gate keeps working when a pinned tag is pruned.
     $urls = @(
+        "https://github.com/yt-dlp/yt-dlp-nightly-builds/releases/latest/download/$exeName",
         "https://github.com/yt-dlp/yt-dlp/releases/latest/download/$exeName",
         "https://github.com/yt-dlp/yt-dlp/releases/download/2025.06.30/$exeName"
     )

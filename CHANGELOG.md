@@ -2,6 +2,17 @@
 
 All notable changes to Correntra Downloader are recorded here. Dates are UTC.
 
+## 0.3.8 — 2026-08-22
+
+### Fixed
+- **Instagram / Reddit logged-out extraction** — stable yt-dlp lacks browser
+  impersonation (`curl_cffi`) and Reddit's new `loid` session, so public
+  reels and many Reddit videos returned "empty media response" or
+  "Account authentication is required". The sidecar now tracks the
+  **nightly/master build** (`yt-dlp-nightly-builds`) which bundles
+  `curl_cffi` for impersonation and includes the Reddit `old.reddit`
+  session fix. `scripts/get-yt-dlp.ps1` prefers the nightly URL first.
+
 ## 0.3.7 — 2026-08-22
 
 ### Fixed
