@@ -241,6 +241,12 @@ public partial class SettingsViewModel : ViewModelBase
     private bool monitorClipboard = true;
 
     [ObservableProperty]
+    private bool virusTotalEnabled;
+
+    [ObservableProperty]
+    private string? virusTotalApiKey;
+
+    [ObservableProperty]
     private bool captureBrowserDownloads = true;
 
     [ObservableProperty]
@@ -308,6 +314,8 @@ public partial class SettingsViewModel : ViewModelBase
         SelectedLanguage = Languages.FirstOrDefault(option => option.Value == stored.Language) ?? Languages[0];
         CheckUpdatesAtStartup = stored.CheckUpdatesAtStartup;
         IncludePrereleases = stored.IncludePrereleases;
+        VirusTotalEnabled = stored.VirusTotalEnabled;
+        VirusTotalApiKey = stored.VirusTotalApiKey;
         ConcurrentDownloads = stored.ConcurrentDownloads;
         SegmentsPerDownload = stored.SegmentsPerDownload;
         GlobalSpeedLimit = stored.GlobalSpeedLimit;
@@ -326,6 +334,8 @@ public partial class SettingsViewModel : ViewModelBase
             Language = SelectedLanguage.Value,
             CheckUpdatesAtStartup = CheckUpdatesAtStartup,
             IncludePrereleases = IncludePrereleases,
+            VirusTotalEnabled = VirusTotalEnabled,
+            VirusTotalApiKey = string.IsNullOrWhiteSpace(VirusTotalApiKey) ? null : VirusTotalApiKey!.Trim(),
             ConcurrentDownloads = ConcurrentDownloads,
             SegmentsPerDownload = SegmentsPerDownload,
             GlobalSpeedLimit = GlobalSpeedLimit,

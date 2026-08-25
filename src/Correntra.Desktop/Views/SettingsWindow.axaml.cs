@@ -2,6 +2,7 @@ using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Styling;
+using System.Diagnostics;
 using Correntra.Desktop.Services;
 using Correntra.Desktop.ViewModels;
 
@@ -50,4 +51,16 @@ public partial class SettingsWindow : Window
     }
 
     private void OnCancelClick(object? sender, Avalonia.Interactivity.RoutedEventArgs e) => Close(false);
+
+    private void OnVirusTotalKeyClick(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
+    {
+        try
+        {
+            Process.Start(new ProcessStartInfo("https://www.virustotal.com/gui/my-apikey") { UseShellExecute = true });
+        }
+        catch
+        {
+            // Browser launch is best-effort; the URL is also shown in the docs.
+        }
+    }
 }

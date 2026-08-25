@@ -67,6 +67,10 @@ public sealed class DesktopSettings
 
     public string Language { get; set; } = "tr";
 
+    public bool VirusTotalEnabled { get; set; }
+
+    public string? VirusTotalApiKey { get; set; }
+
     public bool CheckUpdatesAtStartup { get; set; } = true;
 
     public bool IncludePrereleases { get; set; }

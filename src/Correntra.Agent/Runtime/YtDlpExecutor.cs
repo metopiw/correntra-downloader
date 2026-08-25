@@ -364,6 +364,7 @@ public sealed partial class YtDlpExecutor
         IReadOnlyDictionary<string, string>? headers = null,
         Action<double, long?>? onProgress = null,
         Action? onFinalizing = null,
+        bool allowPlaylist = false,
         CancellationToken cancellationToken = default)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(url);
@@ -372,7 +373,7 @@ public sealed partial class YtDlpExecutor
         Directory.CreateDirectory(Path.GetDirectoryName(outputPath)!);
 
         YtDlpDownloadResult result = await RunDownloadAsync(
-            BuildDownloadArguments(url, formatSelector, outputPath, headers, CookieBrowserChain[0]),
+            BuildDownloadArguments(url, formatSelector, outputPath, headers, CookieBrowserChain[0], allowPlaylist),
             outputPath,
             onProgress,
             onFinalizing,
@@ -382,7 +383,7 @@ public sealed partial class YtDlpExecutor
             foreach (string browser in CookieBrowserChain.Skip(1))
             {
                 result = await RunDownloadAsync(
-                    BuildDownloadArguments(url, formatSelector, outputPath, headers, browser),
+                    BuildDownloadArguments(url, formatSelector, outputPath, headers, browser, allowPlaylist),
                     outputPath,
                     onProgress,
                     onFinalizing,
@@ -396,7 +397,7 @@ public sealed partial class YtDlpExecutor
             // Anonymous pass: every session source above was locked, missing
             // or rejected; this is what keeps public downloads alive.
             result = await RunDownloadAsync(
-                BuildDownloadArguments(url, formatSelector, outputPath, headers, cookieBrowser: null),
+                BuildDownloadArguments(url, formatSelector, outputPath, headers, cookieBrowser: null, allowPlaylist),
                 outputPath,
                 onProgress,
                 onFinalizing,
@@ -411,14 +412,26 @@ public sealed partial class YtDlpExecutor
         string? formatSelector,
         string outputPath,
         IReadOnlyDictionary<string, string>? headers,
-        string? cookieBrowser)
+        string? cookieBrowser,
+        bool allowPlaylist = false)
     {
         var arguments = new List<string>
         {
-            "--no-warnings", "--newline", "--no-playlist", "--restrict-filenames",
+            "--no-warnings", "--newline", "--restrict-filenames",
             "--retries", "10", "--fragment-retries", "10",
             "--no-part", "-o", outputPath,
         };
+        if (!allowPlaylist)
+        {
+            arguments.Insert(2, "--no-playlist");
+        }
+        else
+        {
+            // Playlist mode: keep the user's folder tidy — one numbered file per entry.
+            string directory = Path.GetDirectoryName(outputPath)!;
+            string stem = Path.GetFileNameWithoutExtension(outputPath);
+            arguments[arguments.IndexOf("-o") + 1] = Path.Combine(directory, "%(playlist_index)03d - " + stem + "%(ext)s");
+        }
         if (cookieBrowser is not null)
         {
             arguments.Add("--cookies-from-browser");

@@ -201,6 +201,12 @@ public partial class MainViewModel : ViewModelBase
             else
             {
                 existing.UpdateRuntime(size, stateKey, progress, remaining, speed, description);
+                if (stateKey == "State.Completed" &&
+                    existing.VtStatus.Length == 0 &&
+                    job.BytesTransferred is > 0)
+                {
+                    QueueVirusTotalCheck(existing);
+                }
             }
         }
 
@@ -494,6 +500,59 @@ public partial class MainViewModel : ViewModelBase
         StatusMessage = localizer["Status.Ready"];
         OnPropertyChanged(nameof(BrowserCaptureStatus));
         RefreshSummary();
+    }
+
+    /// <summary>
+    /// Fire-and-forget VirusTotal reputation check for a finished download.
+    /// Only runs when the user stored an API key; failures stay silent except
+    /// for a short status note. Results land on the row via the UI thread.
+    /// </summary>
+    private void QueueVirusTotalCheck(DownloadListItem item)
+    {
+        DesktopSettings settings = DesktopSettingsStore.Load();
+        if (!settings.VirusTotalEnabled ||
+            string.IsNullOrWhiteSpace(settings.VirusTotalApiKey) ||
+            item.DestinationPath is not { } path)
+        {
+            return;
+        }
+
+        string jobId = item.JobId ?? string.Empty;
+        _ = Task.Run(async () =>
+        {
+            try
+            {
+                VirusTotalReport? report = await VirusTotalService.ScanFileAsync(
+                    path, settings.VirusTotalApiKey).ConfigureAwait(true);
+
+                string message;
+                bool isThreat = false;
+                if (report is null)
+                {
+                    message = localizer["VirusTotal.Unknown"];
+                }
+                else if (report.IsClean)
+                {
+                    message = string.Format(
+                        CultureInfo.CurrentCulture, localizer["VirusTotal.Clean"], 0, report.Engines);
+                }
+                else
+                {
+                    message = string.Format(
+                        CultureInfo.CurrentCulture, localizer["VirusTotal.Detected"], report.Detections, report.Engines);
+                    isThreat = true;
+                }
+
+                DownloadListItem? row = Downloads.FirstOrDefault(candidate => candidate.JobId == jobId);
+                row?.SetVirusTotalStatus(message, isThreat);
+            }
+            catch (Exception exception)
+            {
+                DownloadListItem? row = Downloads.FirstOrDefault(candidate => candidate.JobId == jobId);
+                row?.SetVirusTotalStatus(string.Format(
+                    CultureInfo.CurrentCulture, localizer["VirusTotal.Failed"], exception.Message));
+            }
+        });
     }
 
     private void RefreshSummary()

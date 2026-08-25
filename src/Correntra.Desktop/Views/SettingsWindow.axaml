@@ -150,6 +150,15 @@
             </Border>
             <CheckBox Content="{DynamicResource Settings.Privacy.Crash}" IsChecked="{Binding CrashReportsRequireApproval}" />
             <CheckBox Content="{DynamicResource Settings.Privacy.History}" IsChecked="{Binding KeepHistory}" />
+            <Separator />
+            <TextBlock Text="{DynamicResource Settings.VirusTotal.Heading}" FontWeight="SemiBold" />
+            <CheckBox Content="{DynamicResource Settings.VirusTotal.Enable}" IsChecked="{Binding VirusTotalEnabled}" />
+            <StackPanel Spacing="4">
+              <TextBlock Text="{DynamicResource Settings.VirusTotal.ApiKey}" Classes="muted" />
+              <TextBox Text="{Binding VirusTotalApiKey}" Watermark="VirusTotal API key" />
+              <Button Classes="secondary" Content="{DynamicResource Settings.VirusTotal.Get}" HorizontalAlignment="Left"
+                      Click="OnVirusTotalKeyClick" />
+            </StackPanel>
             <Button Classes="secondary" Content="{DynamicResource Settings.Privacy.Clear}" HorizontalAlignment="Left" />
           </StackPanel>
         </ScrollViewer>

@@ -105,6 +105,53 @@ try {
 } catch {}
 
 // ---------------------------------------------------------------------------
+// Right-click "Download with Correntra" context menu
+// ---------------------------------------------------------------------------
+const CTX_MENU_ID = "correntra-download-link";
+try {
+  chrome.runtime.onInstalled.addListener(() => {
+    chrome.contextMenus.create({
+      id: CTX_MENU_ID,
+      title: "Correntra Downloader ile indir",
+      contexts: ["link", "video", "audio"],
+    });
+  });
+  chrome.contextMenus.onClicked.addListener((info, tab) => {
+    if (info.menuItemId !== CTX_MENU_ID) return;
+    // Explicit user intent: bypass the captureEnabled switch, like IDM's menu.
+    const url = info.linkUrl || info.srcUrl || info.frameUrl || info.pageUrl;
+    if (!isHttpUrl(url)) return;
+    void (async () => {
+      keepAlivePush();
+      try {
+        if (!(await pingAgent())) {
+          await rememberCapture({ fileName: fileNameOf(url, "download"), outcome: "agent-unreachable", via: "context-menu" });
+          flashBadge("!", "#d43a3a");
+          return;
+        }
+        const res = await postAgent("/takeover", {
+          url,
+          finalUrl: url,
+          filename: fileNameOf(url, "download"),
+          mime: "",
+          referrer: (tab && tab.url) || "",
+          headers: tab && tab.url ? { Referer: tab.url } : {},
+        }, 8000);
+        if (res && res.accepted && res.jobId) {
+          await rememberCapture({ fileName: fileNameOf(url, "download"), outcome: "captured", jobId: res.jobId, via: "context-menu" });
+          flashBadge("✓", "#1a9c5b");
+        } else {
+          flashBadge("!", "#d43a3a");
+        }
+      } catch (e) {
+        await rememberCapture({ fileName: fileNameOf(url, "download"), outcome: "error", reason: String(e && e.message ? e.message : e), via: "context-menu" });
+        flashBadge("!", "#d43a3a");
+      } finally { keepAlivePop(); }
+    })();
+  });
+} catch {}
+
+// ---------------------------------------------------------------------------
 // Media sniffing for video overlay (unchanged behaviour, kept for parity)
 // ---------------------------------------------------------------------------
 const mediaByTab = new Map();

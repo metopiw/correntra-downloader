@@ -581,12 +581,44 @@ public sealed class DownloadJobCoordinator : IAsyncDisposable
         return false;
     }
 
+    /// <summary>
+    /// A YouTube/Instagram-style playlist URL ("...list=PL…" without a "v="
+    /// video id, "/playlists/", or a TikTok sound collection) must expand to
+    /// every entry instead of yt-dlp's single-item default.
+    /// </summary>
+    public static bool LooksLikePlaylist(Uri uri)
+    {
+        string query = uri.Query.ToLowerInvariant();
+        if (query.Contains("list=") && !query.Contains("v=", StringComparison.Ordinal) && !query.Contains("video_id", StringComparison.Ordinal))
+        {
+            return true;
+        }
+
+        string path = uri.AbsolutePath.ToLowerInvariant();
+        return path.Contains("/playlist") || path.StartsWith("/playlists/", StringComparison.Ordinal);
+    }
+
     private async Task RunYtDlpAsync(AgentJobRecord job, CancellationToken cancellationToken)
     {
+        // A playlist expands to one file per entry; park them in a sibling
+        // folder named after the job so the category root stays readable.
+        bool isPlaylist = LooksLikePlaylist(job.Source);
+        string targetDirectory = Path.GetDirectoryName(job.DestinationPath)!;
+        if (isPlaylist)
+        {
+            string folderName = SafePath.SanitizeFileName(Path.GetFileNameWithoutExtension(job.FileName));
+            targetDirectory = Path.Combine(targetDirectory, folderName);
+            Directory.CreateDirectory(targetDirectory);
+            await _repository.UpdateFileNameAsync(
+                job.Id,
+                Path.Combine(folderName, Path.GetFileName(job.FileName)),
+                CancellationToken.None).ConfigureAwait(false);
+        }
+
         // yt-dlp skips existing targets ("has already been downloaded"), which
         // would silently report the OLD file as the fresh download's result;
         // move the target aside first.
-        string destination = ResolveCollisionFreeDestination(job.DestinationPath);
+        string destination = ResolveCollisionFreeDestination(Path.Combine(targetDirectory, Path.GetFileName(job.DestinationPath)));
         if (!string.Equals(destination, job.DestinationPath, StringComparison.Ordinal))
         {
             await _repository.UpdateFileNameAsync(
@@ -681,6 +713,7 @@ public sealed class DownloadJobCoordinator : IAsyncDisposable
                         DateTimeOffset.UtcNow,
                         CancellationToken.None);
                 },
+                allowPlaylist: isPlaylist,
                 cancellationToken).ConfigureAwait(false);
 
             string? finalPath = result.Succeeded ? FindProducedFile(destination) : null;
@@ -689,6 +722,24 @@ public sealed class DownloadJobCoordinator : IAsyncDisposable
                 File.Delete(destination);
                 File.Move(finalPath, destination);
                 finalPath = destination;
+            }
+
+            if (result.Succeeded && isPlaylist &&
+                Directory.Exists(targetDirectory) &&
+                Directory.EnumerateFiles(targetDirectory).Any())
+            {
+                // Entries land as numbered files ("001 - Title.mp4", …); count
+                // the whole folder instead of hunting for the -o template.
+                long playlistLength = Directory.EnumerateFiles(targetDirectory)
+                    .Sum(static path => new FileInfo(path).Length);
+                await _repository.UpdateProgressAsync(
+                    job.Id,
+                    DownloadJobState.Completed,
+                    playlistLength,
+                    playlistLength,
+                    DateTimeOffset.UtcNow,
+                    CancellationToken.None).ConfigureAwait(false);
+                return;
             }
 
             if (result.Succeeded && finalPath is not null && File.Exists(finalPath))

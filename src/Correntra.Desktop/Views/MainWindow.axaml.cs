@@ -1,5 +1,8 @@
+using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Controls.Shapes;
 using Avalonia.Input;
+using Avalonia.Media;
 using Correntra.Desktop.Models;
 using Correntra.Desktop.ViewModels;
 using Correntra.Core.Ipc;
@@ -9,6 +12,11 @@ namespace Correntra.Desktop.Views;
 public partial class MainWindow : Window
 {
     private MainViewModel? subscribedViewModel;
+
+    /// <summary>Ring buffer of recent aggregate speeds (bytes/s) for the sparkline.</summary>
+    private readonly double[] speedHistory = new double[60];
+
+    private int speedHistoryCount;
 
     public MainWindow()
     {
@@ -22,6 +30,7 @@ public partial class MainWindow : Window
         {
             subscribedViewModel = viewModel;
             viewModel.DialogRequested += OnDialogRequested;
+            viewModel.PropertyChanged += OnViewModelPropertyChanged;
         }
     }
 
@@ -30,9 +39,53 @@ public partial class MainWindow : Window
         if (subscribedViewModel is { } viewModel)
         {
             viewModel.DialogRequested -= OnDialogRequested;
+            viewModel.PropertyChanged -= OnViewModelPropertyChanged;
         }
 
         base.OnClosed(e);
+    }
+
+    /// <summary>
+    /// Redraws the 150x22 sparkline only when the aggregate speed text
+    /// changes (≈ twice a second at most). Sixty polyline points and one
+    /// Text element per redraw — negligible CPU/RAM, no timers of its own.
+    /// </summary>
+    private void OnViewModelPropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName != nameof(MainViewModel.AggregateSpeedText) ||
+            DataContext is not MainViewModel viewModel ||
+            this.FindControl<Canvas>("SpeedGraph") is not { } canvas)
+        {
+            return;
+        }
+
+        speedHistory[speedHistoryCount % speedHistory.Length] = viewModel.AggregateBytesPerSecond;
+        speedHistoryCount++;
+        if (speedHistoryCount < 3)
+        {
+            return; // Need at least two samples to draw a line.
+        }
+
+        double peak = 1;
+        for (int index = 0; index < speedHistory.Length && index < speedHistoryCount; index++)
+        {
+            peak = Math.Max(peak, speedHistory[index]);
+        }
+
+        int written = Math.Min(speedHistoryCount, speedHistory.Length);
+        var points = new List<Point>(written);
+        for (int step = 0; step < written; step++)
+        {
+            // Oldest sample at the left edge; the ring wraps naturally.
+            int index = speedHistoryCount > speedHistory.Length
+                ? (speedHistoryCount + step) % speedHistory.Length
+                : step;
+            double x = canvas.Width * step / (written - 1);
+            double y = canvas.Height - 2 - (canvas.Height - 4) * (speedHistory[index] / peak);
+            points.Add(new Point(x, y));
+        }
+
+        SpeedGraphLine.Points = points;
     }
 
     private void OnTitleBarPointerPressed(object? sender, PointerPressedEventArgs e)

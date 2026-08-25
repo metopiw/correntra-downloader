@@ -152,6 +152,38 @@ public sealed class DownloadListItem : ObservableObject
         Speed = newSpeed;
         Description = newDescription;
     }
+
+    private string vtStatus = "";
+    private bool vtIsThreat;
+
+    /// <summary>One-line VirusTotal verdict shown under the file name.</summary>
+    public string VtStatus
+    {
+        get => vtStatus;
+        private set
+        {
+            if (vtStatus != value)
+            {
+                vtStatus = value;
+                OnPropertyChanged();
+                OnPropertyChanged(nameof(HasVtStatus));
+            }
+        }
+    }
+
+    public bool HasVtStatus => !string.IsNullOrEmpty(vtStatus);
+
+    /// <summary>Clean/unknown verdicts use the muted style; threats go red.</summary>
+    public bool ShowMutedVt => HasVtStatus && !vtIsThreat;
+
+    public bool VtIsThreat => vtIsThreat;
+
+    public void SetVirusTotalStatus(string status, bool isThreat = false)
+    {
+        vtIsThreat = isThreat;
+        OnPropertyChanged(nameof(VtIsThreat));
+        VtStatus = status;
+    }
 }
 
 public sealed class LocalizedOption : ObservableObject
