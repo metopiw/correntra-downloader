@@ -1,12 +1,103 @@
-Correntra Downloader Source License
+# Functional Source License, v1.1, MIT Future License
 
-Copyright (c) 2026 Correntra. All rights reserved.
+## Abbreviation
 
-The source code in this repository is made available for inspection,
-development, testing, and personal evaluation. No permission is granted to
-redistribute, sublicense, sell, or publish modified or unmodified copies
-without prior written permission from the copyright holder.
+FSL-1.1-MIT
 
-Third-party components retain their own licenses. See
-THIRD-PARTY-NOTICES.md and the licenses shipped with release artifacts.
+## Notice
 
+Copyright (c) 2026 Correntra
+
+## Terms and Conditions
+
+### Licensor ("We")
+
+The party offering the Software under these Terms and Conditions.
+
+### The Software
+
+The "Software" is each version of Correntra Downloader that We make available
+under these Terms and Conditions, in source or object code form, and any
+documentation We provide with it.
+
+### License Grant
+
+Subject to your compliance with this License Grant and the Conditions below,
+We grant you a non-exclusive, worldwide, royalty-free patent license under
+copyright and other intellectual property rights to:
+
+1. use, copy, modify, create derivative works of, and publicly display the
+   Software for any purpose other than a Competing Use;
+2. distribute the Software to others for their use under these same Terms and
+   Conditions;
+3. submit contributions (patches, pull requests) to Us — accepted
+   contributions are incorporated under Our copyright.
+
+"Competing Use" means making the Software available to others in a commercial
+product or service that:
+
+1. substitutes for the Software;
+2. substitutes for any other product or service We offer using the Software
+   that is reasonably similar to the Software (for example, another download
+   manager distributed as a competing commercial product); or
+3. redistributes the Software, modified or unmodified, as part of such a
+   product or service.
+
+You may NOT sell, license, or charge for the Software itself.
+
+Personal, educational, research, internal business, and non-commercial use are
+unconditionally permitted.
+
+### Change License
+
+After two (2) years from the date We first publish a given version of the
+Software, that version automatically becomes licensed to everyone under the
+MIT License:
+
+> Permission is hereby granted, free of charge, to any person obtaining a copy
+> of this software and associated documentation files (the "Software"), to deal
+> in the Software without restriction, including without limitation the rights
+> to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+> copies of the Software, and to permit persons to whom the Software is
+> furnished to do so, subject to the following conditions:
+>
+> The above copyright notice and this permission notice shall be included in all
+> copies or substantial portions of the Software.
+>
+> THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+> IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+> FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+> AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+> LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+> OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+> SOFTWARE.
+
+Newer versions released under these Terms and Conditions carry their own
+two-year window.
+
+### Patents
+
+To the extent licensor holds patents covering the Software, this grant applies
+only to use permitted above. Suing over the Software terminates this license.
+
+### No Other Rights
+
+These Terms and Conditions do not imply any other licenses or trademark rights.
+
+### Notices
+
+You must preserve this license notice in all copies or substantial portions of
+the Software. Third-party components retain their own licenses; see
+THIRD-PARTY-NOTICES.md and the notices shipped with release artifacts.
+
+### NO WARRANTY
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
+
+### LIABILITY
+
+IN NO EVENT SHALL WE BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
+WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+CONNECTION WITH THE SOFTWARE.

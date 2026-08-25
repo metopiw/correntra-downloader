@@ -57,6 +57,9 @@ DRM systems. Website terms and content rights remain the user's responsibility.
 
 ## License
 
-The Correntra source is source-available and all rights are reserved. Runtime
-dependencies retain their permissive or separately documented licenses. See
-[`LICENSE.txt`](LICENSE.txt) and [`THIRD-PARTY-NOTICES.md`](THIRD-PARTY-NOTICES.md).
+The Correntra source is published under the Functional Source License
+(FSL-1.1-MIT): anyone may use, study, modify, and contribute to the code, but
+competing commercial uses are not permitted. Two years after each release, that
+version automatically converts to the MIT License. Runtime dependencies retain
+their permissive or separately documented licenses. See [`LICENSE.txt`](LICENSE.txt)
+and [`THIRD-PARTY-NOTICES.md`](THIRD-PARTY-NOTICES.md).
