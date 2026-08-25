@@ -1,0 +1,114 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        x:Class="Correntra.Desktop.Views.ExtensionSetupDialog"
+        Classes="dialog"
+        Title="{DynamicResource ExtSetup.Title}"
+        Icon="/Assets/correntra.ico"
+        Width="640"
+        Height="560">
+  <Grid RowDefinitions="Auto,*,Auto">
+    <!-- Header -->
+    <Border Background="{DynamicResource Corr.PanelRaised}"
+            BorderBrush="{DynamicResource Corr.Border}"
+            BorderThickness="0,0,0,1"
+            Padding="24,20">
+      <Grid ColumnDefinitions="54,*">
+        <Border Width="44" Height="44" CornerRadius="13" Background="{DynamicResource Corr.AccentMuted}">
+          <PathIcon Data="{StaticResource Icon.Globe}" Width="23" Height="23" Foreground="{DynamicResource Corr.Accent}" />
+        </Border>
+        <StackPanel Grid.Column="1" Spacing="4" VerticalAlignment="Center">
+          <TextBlock Text="{DynamicResource ExtSetup.Heading}" Classes="dialogHeading" />
+          <TextBlock Text="{DynamicResource ExtSetup.Subtitle}"
+                     Classes="muted"
+                     FontSize="11"
+                     TextWrapping="Wrap" />
+        </StackPanel>
+      </Grid>
+    </Border>
+
+    <!-- Steps -->
+    <ScrollViewer Grid.Row="1">
+      <StackPanel Margin="24,18" Spacing="10">
+
+        <Border Classes="card" Padding="14,12">
+          <TextBlock x:Name="BrowserLineText"
+                     Text="{DynamicResource ExtSetup.BrowserLine}"
+                     Foreground="{DynamicResource Corr.TextSecondary}"
+                     TextWrapping="Wrap" FontSize="11" />
+        </Border>
+
+        <!-- Step 1 -->
+        <Border Classes="card" Padding="16,13">
+          <Grid ColumnDefinitions="34,*">
+            <Ellipse Width="24" Height="24" Fill="{DynamicResource Corr.AccentMuted}" VerticalAlignment="Top" />
+            <TextBlock Text="1" Grid.Column="0" FontWeight="Bold" Foreground="{DynamicResource Corr.Accent}"
+                       HorizontalAlignment="Center" VerticalAlignment="Top" Margin="0,3" />
+            <StackPanel Grid.Column="1" Spacing="8">
+              <TextBlock Text="{DynamicResource ExtSetup.Step1}" FontWeight="SemiBold" TextWrapping="Wrap" />
+              <Button Classes="secondary" Content="{DynamicResource ExtSetup.OpenFolder}" HorizontalAlignment="Left"
+                      Click="OnOpenFolderClick" />
+            </StackPanel>
+          </Grid>
+        </Border>
+
+        <!-- Step 2 -->
+        <Border Classes="card" Padding="16,13">
+          <Grid ColumnDefinitions="34,*">
+            <Ellipse Width="24" Height="24" Fill="{DynamicResource Corr.AccentMuted}" VerticalAlignment="Top" />
+            <TextBlock Text="2" Grid.Column="0" FontWeight="Bold" Foreground="{DynamicResource Corr.Accent}"
+                       HorizontalAlignment="Center" VerticalAlignment="Top" Margin="0,3" />
+            <StackPanel Grid.Column="1" Spacing="8">
+              <TextBlock Text="{DynamicResource ExtSetup.Step2}" FontWeight="SemiBold" TextWrapping="Wrap" />
+              <Button Classes="secondary" Content="{DynamicResource ExtSetup.OpenPage}" HorizontalAlignment="Left"
+                      Click="OnOpenExtensionsPageClick" />
+            </StackPanel>
+          </Grid>
+        </Border>
+
+        <!-- Step 3 -->
+        <Border Classes="card" Padding="16,13">
+          <Grid ColumnDefinitions="34,*">
+            <Ellipse Width="24" Height="24" Fill="{DynamicResource Corr.AccentMuted}" VerticalAlignment="Top" />
+            <TextBlock Text="3" Grid.Column="0" FontWeight="Bold" Foreground="{DynamicResource Corr.Accent}"
+                       HorizontalAlignment="Center" VerticalAlignment="Top" Margin="0,3" />
+            <StackPanel Grid.Column="1" Spacing="8">
+              <TextBlock Text="{DynamicResource ExtSetup.Step3}" FontWeight="SemiBold" TextWrapping="Wrap" />
+              <TextBlock Text="{DynamicResource ExtSetup.PathCopied}" Classes="muted" FontSize="11" TextWrapping="Wrap" />
+            </StackPanel>
+          </Grid>
+        </Border>
+
+        <!-- Step 4 -->
+        <Border Classes="card" Padding="16,13">
+          <Grid ColumnDefinitions="34,*">
+            <Ellipse Width="24" Height="24" Fill="{DynamicResource Corr.AccentMuted}" VerticalAlignment="Top" />
+            <TextBlock Text="4" Grid.Column="0" FontWeight="Bold" Foreground="{DynamicResource Corr.Accent}"
+                       HorizontalAlignment="Center" VerticalAlignment="Top" Margin="0,3" />
+            <TextBlock Text="{DynamicResource ExtSetup.Step4}" Grid.Column="1" FontWeight="SemiBold" TextWrapping="Wrap" />
+          </Grid>
+        </Border>
+
+      </StackPanel>
+    </ScrollViewer>
+
+    <!-- Footer: live status + actions -->
+    <Border Grid.Row="2"
+            Background="{DynamicResource Corr.TitleBackground}"
+            BorderBrush="{DynamicResource Corr.Border}"
+            BorderThickness="0,1,0,0"
+            Padding="24,14">
+      <Grid ColumnDefinitions="*,Auto,Auto">
+        <StackPanel Orientation="Horizontal" Spacing="9" VerticalAlignment="Center">
+          <Ellipse x:Name="StatusDot" Width="10" Height="10" Fill="{DynamicResource Corr.Warning}" />
+          <TextBlock x:Name="StatusText"
+                     Text="{DynamicResource ExtSetup.Waiting}"
+                     FontSize="12"
+                     FontWeight="SemiBold"
+                     VerticalAlignment="Center" />
+        </StackPanel>
+        <Button x:Name="DoneButton" Grid.Column="2" Classes="accent" Content="{DynamicResource Common.Close}"
+                IsEnabled="False" Click="OnCloseClick" />
+      </Grid>
+    </Border>
+  </Grid>
+</Window>

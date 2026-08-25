@@ -73,6 +73,8 @@
                 <CheckBox Content="{DynamicResource Settings.Browser.Capture}" IsChecked="{Binding CaptureBrowserDownloads}" />
                 <CheckBox Content="{DynamicResource Settings.Browser.Media}" IsChecked="{Binding ShowMediaPanel}" />
                 <CheckBox Content="{DynamicResource Settings.Browser.Session}" IsChecked="{Binding UseTemporarySession}" />
+                <Button Classes="secondary" Content="{DynamicResource Settings.Browser.RunSetup}"
+                        HorizontalAlignment="Left" Click="OnExtensionSetupClick" />
               </StackPanel>
             </Border>
             <StackPanel Spacing="6">

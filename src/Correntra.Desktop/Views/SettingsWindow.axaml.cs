@@ -52,6 +52,19 @@ public partial class SettingsWindow : Window
 
     private void OnCancelClick(object? sender, Avalonia.Interactivity.RoutedEventArgs e) => Close(false);
 
+    private async void OnExtensionSetupClick(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
+    {
+        if (Application.Current?.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop &&
+            desktop.MainWindow?.DataContext is MainViewModel mainViewModel)
+        {
+            await new ExtensionSetupDialog(mainViewModel).ShowDialog(this);
+        }
+        else
+        {
+            await new ExtensionSetupDialog(new MainViewModel()).ShowDialog(this);
+        }
+    }
+
     private void OnVirusTotalKeyClick(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
     {
         try

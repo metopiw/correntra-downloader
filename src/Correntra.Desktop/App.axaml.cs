@@ -73,6 +73,21 @@ public partial class App : Application, IDisposable
 
         Observe(bridge.StartAsync(), "Desktop Agent bridge startup");
         Observe(GitHubUpdateService.RunStartupCheckAsync(mainWindow, viewModel), "GitHub update check");
+
+        // First-run extension wizard: only when capture is not already live
+        // (a returning user with the extension installed never sees it).
+        if (!viewModel.IsBrowserCaptureConnected)
+        {
+            DesktopSettings settings = DesktopSettingsStore.Load();
+            if (!settings.ExtensionSetupShown &&
+                ExtensionSetupService.LocateExtensionFolder() is not null)
+            {
+                settings.ExtensionSetupShown = true;
+                DesktopSettingsStore.Save(settings);
+                _ = Avalonia.Threading.Dispatcher.UIThread.InvokeAsync(async () =>
+                    await new ExtensionSetupDialog(viewModel).ShowDialog(mainWindow));
+            }
+        }
     }
 
     private static void Observe(Task task, string operation)

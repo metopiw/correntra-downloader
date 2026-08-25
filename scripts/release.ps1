@@ -113,6 +113,10 @@ Copy-Item -LiteralPath (Join-Path $repositoryRoot "THIRD-PARTY-NOTICES.md") -Des
 Copy-Item -LiteralPath (Join-Path $repositoryRoot "artifacts\sbom\bom.json") -Destination (Join-Path $applicationRoot "sbom.cdx.json") -Force
 Copy-Item -LiteralPath (Join-Path $repositoryRoot "packaging\UZANTI-KURULUMU.txt") -Destination $applicationRoot -Force
 
+# Ship the browser extension next to the app so the in-app setup wizard can
+# point "Load unpacked" at it without any download.
+Copy-Item -LiteralPath (Join-Path $repositoryRoot "browser-extension") -Destination (Join-Path $applicationRoot "browser-extension") -Recurse -Force
+
 $portablePath = Join-Path $releaseRoot "Correntra-Downloader-$Version-win-x64-portable.zip"
 $sbomPath = Join-Path $releaseRoot "Correntra-Downloader-$Version-sbom.cdx.json"
 if (Test-Path -LiteralPath $portablePath) {
