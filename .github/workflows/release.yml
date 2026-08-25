@@ -31,5 +31,7 @@ jobs:
           $notes = "packaging/RELEASE-NOTES-${{ inputs.version }}.md"
           if (-not (Test-Path $notes)) { $notes = "packaging/INSTALLER-README.md" }
           gh release create $tag --repo $env:GITHUB_REPOSITORY --title "Correntra Downloader $tag" --notes-file $notes
-          gh release upload $tag release/* --repo $env:GITHUB_REPOSITORY --clobber
+          Get-ChildItem release -File | ForEach-Object {
+            gh release upload $tag $_.FullName --repo $env:GITHUB_REPOSITORY --clobber
+          }
 
