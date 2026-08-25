@@ -43,6 +43,16 @@ public sealed class LocalizationService : INotifyPropertyChanged
         SetLanguage(systemLanguage.Equals("en", StringComparison.OrdinalIgnoreCase) ? "en" : "tr");
     }
 
+    /// <summary>
+    /// Startup path: honour the language the user saved in Settings; fall back
+    /// to the system culture only when no setting has been persisted yet.
+    /// </summary>
+    public void InitializeFromSettings()
+    {
+        string? storedLanguage = Services.DesktopSettingsStore.Load().Language;
+        SetLanguage(string.IsNullOrWhiteSpace(storedLanguage) ? "tr" : storedLanguage);
+    }
+
     public void SetLanguage(string requestedLanguage)
     {
         var normalized = requestedLanguage.Equals("en", StringComparison.OrdinalIgnoreCase) ? "en" : "tr";

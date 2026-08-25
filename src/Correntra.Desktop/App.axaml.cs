@@ -28,7 +28,7 @@ public partial class App : Application, IDisposable
         if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
         {
             RequestedThemeVariant = ThemeVariant.Dark;
-            LocalizationService.Current.InitializeFromSystemCulture();
+            LocalizationService.Current.InitializeFromSettings();
             var viewModel = new MainViewModel();
             var mainWindow = new MainWindow
             {
