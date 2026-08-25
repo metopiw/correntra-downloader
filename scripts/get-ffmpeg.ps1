@@ -5,10 +5,15 @@ param(
 )
 
 $ErrorActionPreference = "Stop"
-$archiveName = "ffmpeg-n8.1-latest-win64-lgpl-shared-8.1.zip"
-$archiveUrl = "https://github.com/BtbN/FFmpeg-Builds/releases/download/latest/$archiveName"
-$expectedSha256 = "C0692B85D56F2995656406425C095700117DFD7A84F8CA5AF75EBF92ED08B8A9"
-$folderName = "ffmpeg-n8.1-latest-win64-lgpl-shared-8.1"
+# Pinned to an immutable dated autobuild tag (NOT the rolling "latest" tag,
+# whose assets are replaced in place and break checksum verification).
+# To upgrade: pick a new tag from BtbN/FFmpeg-Builds, update all three values
+# below, verify the LGPL license gate still passes, then run a release.
+$releaseTag = "autobuild-2026-08-24-13-10"
+$archiveName = "ffmpeg-n8.1.2-44-g7c533d0f86-win64-lgpl-shared-8.1.zip"
+$archiveUrl = "https://github.com/BtbN/FFmpeg-Builds/releases/download/$releaseTag/$archiveName"
+$expectedSha256 = "60AA2BE28B1BB7B95C397DDD4EEA4EF464193D2EACAF0B865B40CC976CCB4DB0"
+$folderName = "ffmpeg-n8.1.2-44-g7c533d0f86-win64-lgpl-shared-8.1"
 $destination = [IO.Path]::GetFullPath((Join-Path $PSScriptRoot "..\$DestinationRoot"))
 $archivePath = Join-Path $destination $archiveName
 $expandedRoot = Join-Path $destination $folderName
