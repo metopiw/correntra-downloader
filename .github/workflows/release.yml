@@ -6,7 +6,7 @@ on:
       version:
         description: Semantic version without the v prefix
         required: true
-        default: 0.1.0
+        default: 0.4.0
 
 permissions:
   contents: write
@@ -28,6 +28,8 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           $tag = "v${{ inputs.version }}"
-          gh release create $tag --repo $env:GITHUB_REPOSITORY --title "Correntra Downloader $tag" --notes-file packaging/RELEASE-NOTES-0.1.0.md
+          $notes = "packaging/RELEASE-NOTES-${{ inputs.version }}.md"
+          if (-not (Test-Path $notes)) { $notes = "packaging/INSTALLER-README.md" }
+          gh release create $tag --repo $env:GITHUB_REPOSITORY --title "Correntra Downloader $tag" --notes-file $notes
           gh release upload $tag release/* --repo $env:GITHUB_REPOSITORY --clobber
 

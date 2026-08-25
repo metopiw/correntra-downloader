@@ -2,6 +2,33 @@
 
 All notable changes to Correntra Downloader are recorded here. Dates are UTC.
 
+## 0.4.0 — 2026-08-25
+
+### Added
+- **Playlists expand into their own folder**: URLs like `youtube.com/…?list=…`
+  now download every entry as numbered files (`001 - Title.mp4`, …) inside a
+  subfolder named after the playlist, instead of collapsing to a single merged
+  file. The job row shows the total size of the produced set.
+- **Right-click "Download with Correntra" in the browser**: the extension adds
+  a context-menu entry for links, videos and audio. Using it is an explicit
+  intent, so it works even while general capture is switched off.
+- **Optional VirusTotal reputation check** (Settings → Privacy): completed
+  downloads can be checked against ~70 engines. Only the file's SHA-256 digest
+  ever leaves the machine — never the file itself. The verdict appears under
+  the file name; threats turn red.
+- **Aggregate speed sparkline** in the status bar: a lightweight 60-sample
+  line chart of combined transfer speed, redrawn at most twice per second.
+- **Visual language pass**: consistent type scale (11/13/15/21), soft hover
+  transitions on buttons and rows, and a 180 ms fade+rise entrance for dialogs.
+- `CONTRIBUTING.md` documenting FSL ground rules, PR checklist, good first
+  issues and security reporting.
+
+### Fixed
+- **The chosen language no longer resets on restart**: startup honours the
+  language saved in Settings instead of re-deriving it from the OS culture.
+- The About window now shows the real assembly version (was frozen at
+  "Sürüm 0.1.0").
+
 ## 0.3.9 — 2026-08-23
 
 ### Fixed

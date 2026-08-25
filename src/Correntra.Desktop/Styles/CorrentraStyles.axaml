@@ -4,6 +4,7 @@
     <Setter Property="Background" Value="{DynamicResource Corr.Background}" />
     <Setter Property="Foreground" Value="{DynamicResource Corr.TextPrimary}" />
     <Setter Property="FontFamily" Value="Inter" />
+    <Setter Property="FontSize" Value="13" />
   </Style>
 
   <Style Selector="Window.dialog">
@@ -11,6 +12,20 @@
     <Setter Property="WindowStartupLocation" Value="CenterOwner" />
     <Setter Property="CanResize" Value="False" />
     <Setter Property="ShowInTaskbar" Value="False" />
+  </Style>
+
+  <!-- Motion: dialogs fade in; nothing exceeds ~200ms. -->
+  <Style Selector="Window.dialog">
+    <Style.Animations>
+      <Animation Duration="0:0:0.18" FillMode="Forward" Easing="CubicEaseOut">
+        <KeyFrame Cue="0%">
+          <Setter Property="Opacity" Value="0" />
+        </KeyFrame>
+        <KeyFrame Cue="100%">
+          <Setter Property="Opacity" Value="1" />
+        </KeyFrame>
+      </Animation>
+    </Style.Animations>
   </Style>
 
   <Style Selector="TextBlock.muted">
@@ -25,13 +40,13 @@
   </Style>
 
   <Style Selector="TextBlock.dialogHeading">
-    <Setter Property="FontSize" Value="22" />
+    <Setter Property="FontSize" Value="21" />
     <Setter Property="FontWeight" Value="SemiBold" />
     <Setter Property="Foreground" Value="{DynamicResource Corr.TextPrimary}" />
   </Style>
 
   <Style Selector="TextBlock.sectionTitle">
-    <Setter Property="FontSize" Value="17" />
+    <Setter Property="FontSize" Value="15" />
     <Setter Property="FontWeight" Value="SemiBold" />
     <Setter Property="Foreground" Value="{DynamicResource Corr.TextPrimary}" />
   </Style>
@@ -49,6 +64,12 @@
     <Setter Property="Padding" Value="14,6" />
     <Setter Property="CornerRadius" Value="5" />
     <Setter Property="FontWeight" Value="Medium" />
+    <Setter Property="FontSize" Value="13" />
+    <Setter Property="Transitions">
+      <Transitions>
+        <BrushTransition Property="Background" Duration="0:0:0.12" />
+      </Transitions>
+    </Setter>
   </Style>
 
   <Style Selector="Button.accent">
@@ -77,6 +98,9 @@
     <Setter Property="HorizontalContentAlignment" Value="Center" />
     <Setter Property="VerticalContentAlignment" Value="Center" />
   </Style>
+
+  <!-- Accent discipline: teal marks interactive emphasis only; state colors
+       stay reserved for success/warning/danger semantics. -->
 
   <Style Selector="Button.toolbar:pointerover /template/ ContentPresenter">
     <Setter Property="Background" Value="{DynamicResource Corr.PanelHover}" />
@@ -109,7 +133,7 @@
 
   <Style Selector="Menu.mainMenu MenuItem">
     <Setter Property="Padding" Value="12,5" />
-    <Setter Property="FontSize" Value="12" />
+    <Setter Property="FontSize" Value="13" />
   </Style>
 
   <Style Selector="TextBox, ComboBox, NumericUpDown, TimePicker">
@@ -160,7 +184,12 @@
   </Style>
 
   <Style Selector="DataGrid.downloadGrid DataGridRow">
-    <Setter Property="MinHeight" Value="34" />
+    <Setter Property="MinHeight" Value="38" />
+    <Setter Property="Transitions">
+      <Transitions>
+        <BrushTransition Property="Background" Duration="0:0:0.12" />
+      </Transitions>
+    </Setter>
   </Style>
 
   <Style Selector="DataGrid.downloadGrid DataGridRow:nth-child(even)">

@@ -16,7 +16,7 @@
       <TextBlock Text="{DynamicResource App.Name}" FontSize="28" FontWeight="Bold" HorizontalAlignment="Center" />
       <TextBlock Text="{DynamicResource App.Tagline}" Foreground="{DynamicResource Corr.Accent}" FontSize="14" FontWeight="SemiBold" HorizontalAlignment="Center" />
       <Border Background="{DynamicResource Corr.AccentMuted}" CornerRadius="9" Padding="12,5" HorizontalAlignment="Center">
-        <TextBlock Text="{DynamicResource About.Version}" Foreground="{DynamicResource Corr.Accent}" FontWeight="SemiBold" />
+        <TextBlock x:Name="VersionBadge" Foreground="{DynamicResource Corr.Accent}" FontWeight="SemiBold" />
       </Border>
       <TextBlock Text="{DynamicResource About.Description}"
                  Classes="muted"
