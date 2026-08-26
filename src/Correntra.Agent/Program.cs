@@ -47,7 +47,28 @@ internal static class AgentProgram
                 mediaExecutor: new MediaExecutor());
             await coordinator.InitializeAsync(shutdown.Token).ConfigureAwait(false);
             var dispatcher = new AgentCommandDispatcher(coordinator, new DesktopLauncher());
-            var localBridge = new AgentLocalHttpServer(dispatcher);
+            // Shared secret for the loopback bridge. Written into the deployed
+            // browser-extension folder (readable only from the extension's own
+            // pinned origin), so other local processes cannot forge requests.
+            string? bridgeToken = null;
+            try
+            {
+                string? extensionFolder = LocateExtensionFolderForToken();
+                if (extensionFolder is not null)
+                {
+                    bridgeToken = BridgeTokenFile.Generate();
+                    if (!BridgeTokenFile.TryWrite(extensionFolder, bridgeToken))
+                    {
+                        bridgeToken = null;
+                    }
+                }
+            }
+            catch (Exception)
+            {
+                bridgeToken = null; // Fall back to Origin-only protection.
+            }
+
+            var localBridge = new AgentLocalHttpServer(dispatcher, bridgeToken);
             _ = Task.Run(() => localBridge.RunAsync(shutdown.Token), CancellationToken.None);
             var server = new AgentPipeServer(pipeName, dispatcher);
             if (runOnce)
@@ -70,6 +91,50 @@ internal static class AgentProgram
             Console.CancelKeyPress -= cancelHandler;
             instanceMutex.ReleaseMutex();
         }
+    }
+
+    /// <summary>
+    /// Finds the browser-extension folder to provision the bridge token into:
+    /// next to the agent executable, one level up (Velopack layout), or the
+    /// repository root for dev runs. Mirrors ExtensionSetupService's search.
+    /// </summary>
+    private static string? LocateExtensionFolderForToken()
+    {
+        string? baseDirectory = AppContext.BaseDirectory;
+        if (string.IsNullOrWhiteSpace(baseDirectory))
+        {
+            return null;
+        }
+
+        string shipped = Path.Combine(baseDirectory, "browser-extension");
+        if (File.Exists(Path.Combine(shipped, "manifest.json")))
+        {
+            return shipped;
+        }
+
+        string? parent = Path.GetDirectoryName(Path.TrimEndingDirectorySeparator(baseDirectory));
+        if (parent is not null)
+        {
+            string shippedParent = Path.Combine(parent, "browser-extension");
+            if (File.Exists(Path.Combine(shippedParent, "manifest.json")))
+            {
+                return shippedParent;
+            }
+        }
+
+        DirectoryInfo? candidate = new(baseDirectory);
+        for (int depth = 0; depth < 6 && candidate is not null; depth++)
+        {
+            string repoCopy = Path.Combine(candidate.FullName, "browser-extension");
+            if (File.Exists(Path.Combine(repoCopy, "manifest.json")))
+            {
+                return repoCopy;
+            }
+
+            candidate = candidate.Parent;
+        }
+
+        return null;
     }
 
     private static string? ReadOption(string[] args, string option)

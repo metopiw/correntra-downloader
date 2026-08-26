@@ -18,7 +18,7 @@ public sealed class CaptureAndMediaTests
             suggestedFileName: "folder/file.zip",
             contentLength: 42,
             referrer: new Uri("https://example.test/page"),
-            requestHeaders: new HttpHeaderSet([new("User-Agent", "Browser")])) ;
+            requestHeaders: new HttpHeaderSet([new("User-Agent", "Browser")]));
 
         DownloadSource source = capture.ToDownloadSource();
 

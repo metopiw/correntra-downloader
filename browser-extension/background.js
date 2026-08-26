@@ -19,6 +19,32 @@ const AGENT = "http://127.0.0.1:27410";
 const CAPTURE_LOG_KEY = "captureLog";
 const CAPTURE_LOG_LIMIT = 20;
 
+// Shared secret the agent writes into our own extension folder on every
+// start (bridge-token.txt). Only code running on our pinned chrome-extension
+// origin can fetch() it; web pages and other extensions cannot.
+let bridgeTokenPromise = null;
+function getBridgeToken() {
+  if (!bridgeTokenPromise) {
+    bridgeTokenPromise = (async () => {
+      try {
+        const url = chrome.runtime.getURL("bridge-token.txt");
+        const r = await fetch(url, { cache: "no-store" });
+        if (!r.ok) return null;
+        return (await r.text()).trim() || null;
+      } catch {
+        return null;
+      }
+    })();
+    bridgeTokenPromise.catch(() => {});
+  }
+  return bridgeTokenPromise;
+}
+
+async function agentHeaders() {
+  const token = await getBridgeToken();
+  return token ? { "X-Correntra-Token": token } : {};
+}
+
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
@@ -41,7 +67,7 @@ async function pingAgent() {
 async function postAgent(path, body, ms) {
   const r = await fetch(AGENT + path, {
     method: "POST",
-    headers: { "content-type": "application/json" },
+    headers: { "content-type": "application/json", ...(await agentHeaders()) },
     body: JSON.stringify(body),
     signal: AbortSignal.timeout(ms),
   });

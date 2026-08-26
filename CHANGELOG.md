@@ -2,7 +2,11 @@
 
 All notable changes to Correntra Downloader are recorded here. Dates are UTC.
 
-## Unreleased
+## 0.4.1 — 2026-08-26
+
+### Changed
+- CI now runs `dotnet format --verify-no-changes` and the third-party license
+  gate (SBOM scan) on every push and pull request, not only during releases.
 
 ### Security
 - **The browser bridge now accepts only the genuine Correntra extension.**
@@ -11,6 +15,13 @@ All notable changes to Correntra Downloader are recorded here. Dates are UTC.
   exact Origin — any *other* browser extension or web page is rejected with
   403 instead of any `chrome-extension://` origin being trusted. After
   updating, reload the extension once (`chrome://extensions` → refresh icon).
+- **The bridge additionally authenticates with a per-run secret.** Correntra
+  writes an unguessable token into its own extension folder on every start;
+  command requests carry it in a private header. Other local programs can no
+  longer trigger downloads by imitating the extension. Reachability checks
+  (`/ping`) stay open; normal usage is completely unchanged.
+- The unused native-messaging host component was removed from the codebase,
+  shrinking the attack surface.
 
 ### Added
 - **First-run browser extension setup wizard**: the installer now ships

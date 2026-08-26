@@ -1,9 +1,9 @@
+using System.Diagnostics;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Markup.Xaml;
 using Avalonia.Styling;
-using System.Diagnostics;
 using Correntra.Desktop.Services;
 using Correntra.Desktop.ViewModels;
 using Correntra.Desktop.Views;

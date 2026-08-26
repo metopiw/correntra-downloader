@@ -5,12 +5,22 @@ $body = @{
     headers = @{ "User-Agent" = "Mozilla/5.0 bridge-test" }
 } | ConvertTo-Json -Depth 4
 
-$created = Invoke-RestMethod -Uri "http://127.0.0.1:27410/takeover" -Method Post -Body $body -ContentType "application/json" -TimeoutSec 15
+# The agent provisions a shared token into the extension folder on start;
+# command endpoints reject requests without it (401) when one is present.
+$repoRoot = [IO.Path]::GetFullPath((Join-Path $PSScriptRoot ".."))
+$tokenFile = Join-Path $repoRoot "browser-extension\bridge-token.txt"
+$headers = @{}
+if (Test-Path -LiteralPath $tokenFile) {
+    $token = (Get-Content -LiteralPath $tokenFile -Raw).Trim()
+    if ($token) { $headers["X-Correntra-Token"] = $token }
+}
+
+$created = Invoke-RestMethod -Uri "http://127.0.0.1:27410/takeover" -Method Post -Body $body -ContentType "application/json" -Headers $headers -TimeoutSec 15
 Write-Output ("takeover response: " + ($created | ConvertTo-Json -Compress))
 
 if ($created.jobId) {
     $confirmBody = @{ jobId = $created.jobId; startImmediately = $true } | ConvertTo-Json
-    $confirmed = Invoke-RestMethod -Uri "http://127.0.0.1:27410/confirm" -Method Post -Body $confirmBody -ContentType "application/json" -TimeoutSec 10
+    $confirmed = Invoke-RestMethod -Uri "http://127.0.0.1:27410/confirm" -Method Post -Body $confirmBody -ContentType "application/json" -Headers $headers -TimeoutSec 10
     Write-Output ("confirm response: " + ($confirmed | ConvertTo-Json -Compress))
 }
 

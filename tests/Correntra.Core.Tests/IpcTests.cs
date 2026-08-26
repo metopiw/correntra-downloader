@@ -52,9 +52,9 @@ public sealed class IpcTests
     [InlineData("settings.update", false)]
     [InlineData("download.remove", false)]
     [InlineData(null, false)]
-    public void NativeHostAllowListIsStrict(string? commandType, bool expected)
+    public void IpcCommandAllowListIsStrict(string? commandType, bool expected)
     {
-        Assert.Equal(expected, NativeHostCommandTypes.IsAllowed(commandType));
+        Assert.Equal(expected, IpcCommandTypes.IsAllowed(commandType));
     }
 
     [Fact]

@@ -31,6 +31,13 @@ disabled.
   Origin (local tools) or the pinned extension Origin
   `chrome-extension://bhnibkknmmodoehpaeoijnkabfdmbdjp/` — matched exactly,
   not by prefix. Web pages and any other browser extension receive 403.
+- Command endpoints additionally require the per-run shared token
+  (`X-Correntra-Token`, provisioned by the agent into the deployed
+  `browser-extension/bridge-token.txt`); wrong or missing token gets 401.
+  `/ping` is intentionally open so reachability checks work. A hostile local
+  process running as the user remains outside this threat model (it could
+  read the token file anyway); web pages and foreign extensions are fully
+  blocked.
 - Named pipes to the Desktop remain restricted to the current user.
 - Downloaded files receive Windows Mark-of-the-Web where applicable and are not
   executed automatically.

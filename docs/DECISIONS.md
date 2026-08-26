@@ -6,6 +6,33 @@ One paragraph per decision: context → choice → consequence.
 
 ---
 
+## 2026-08-26 — Bridge shared token; native messaging host deleted
+
+**Context:** Origin pinning alone cannot stop other local processes (any of
+them can forge an `Origin` header at zero cost). Separately, the retired
+`Correntra.NativeHost` project still compiled although nothing referenced it
+— dead attack surface that kept confusing agents ("should I use this?").
+
+**Decision:** The agent now generates a 256-bit secret on every start
+(`BridgeTokenFile`) into `browser-extension/bridge-token.txt` (gitignored).
+The extension's service worker reads it from its own pinned origin and sends
+it as `X-Correntra-Token`; command endpoints (`/jobs`, `/takeover`,
+`/confirm`, `/media/*`) answer 401 without it. `/ping` stays open for
+reachability probes. `Correntra.NativeHost` and its registrar/validator/
+framing/tests were deleted outright; `NativeHostCommandTypes` was renamed to
+`IpcCommandTypes`. A local-process threat is now modelled explicitly, and
+the bridge has a real xUnit security suite (`AgentLocalHttpServerTests`)
+covering origin pinning, Host rebinding, CORS and token enforcement over
+real sockets.
+
+**Consequence:** Other extensions now fail with 401 even if they somehow
+match the origin. Any local process that can read files as the user can also
+read the token — that residual risk is accepted (same trust boundary as
+browser profile access). If the extension folder is missing/unwritable the
+agent degrades gracefully to Origin-only protection.
+
+---
+
 ## 2026-08-26 — Extension identity is pinned (fixed manifest key + exact Origin match)
 
 **Context:** The bridge accepted any `chrome-extension://` Origin, so a

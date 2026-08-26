@@ -24,3 +24,6 @@ src/Correntra.Desktop/Assets/avalonia-logo.ico
 .correntra/
 data/
 logs/
+
+# Per-run bridge secret the agent writes into the extension folder
+browser-extension/bridge-token.txt

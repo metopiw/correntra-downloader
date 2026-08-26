@@ -65,6 +65,31 @@ foreach ($anchor in $anchors) {
     }
 }
 
+# --- 3b) FFmpeg pin values: notice must match the script ---------------------
+$ffmpegScript = Join-Path $repoRoot "scripts/get-ffmpeg.ps1"
+$ffmpegNotice = Join-Path $repoRoot "packaging/FFMPEG-NOTICE.md"
+foreach ($pair in @(
+    @{ File = $ffmpegScript; Field = "releaseTag";    Pattern = '\$releaseTag\s*=\s*"([^"]+)"' },
+    @{ File = $ffmpegScript; Field = "archiveName";   Pattern = '\$archiveName\s*=\s*"([^"]+)"' },
+    @{ File = $ffmpegScript; Field = "expectedSha256"; Pattern = '\$expectedSha256\s*=\s*"([^"]+)"' }
+)) {
+    if (-not (Test-Path -LiteralPath $pair.File)) {
+        $failures.Add("missing required file 'scripts/get-ffmpeg.ps1'")
+        continue
+    }
+    $content = Get-Content -LiteralPath $pair.File -Raw
+    $value = [regex]::Match($content, $pair.Pattern).Groups[1].Value
+    if (-not $value) {
+        $failures.Add("get-ffmpeg.ps1: cannot read $($pair.Field)")
+        continue
+    }
+
+    $noticeContent = Get-Content -LiteralPath $ffmpegNotice -Raw
+    if ($noticeContent -notmatch [regex]::Escape($value)) {
+        $failures.Add("FFMPEG-NOTICE.md does not mention get-ffmpeg.ps1's $($pair.Field) '$value' - pin drift")
+    }
+}
+
 # --- Report ------------------------------------------------------------------
 if ($failures.Count -gt 0) {
     Write-Host "DOC CHECK FAILED - fix these before finishing:"

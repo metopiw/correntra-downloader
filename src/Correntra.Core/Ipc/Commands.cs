@@ -221,8 +221,14 @@ public sealed record CancelCompletionActionCommand : IIpcCommand
     public QueueId QueueId { get; }
 }
 
-public static class NativeHostCommandTypes
+public static class IpcCommandTypes
 {
+    /// <summary>
+    /// Command types accepted over the agent's named-pipe IPC surface. The
+    /// former native messaging host and its command allow-list were removed:
+    /// the loopback HTTP bridge (pinned extension origin + shared token) is
+    /// the only browser integration.
+    /// </summary>
     public static bool IsAllowed(string? type)
     {
         return type is "ping"

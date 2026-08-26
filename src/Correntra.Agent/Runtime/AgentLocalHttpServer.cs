@@ -14,6 +14,7 @@ namespace Correntra.Agent.Runtime;
 public sealed class AgentLocalHttpServer
 {
     public const int Port = 27410;
+    private readonly int _port;
     private const int MaximumBodyBytes = 128 * 1024;
     private static readonly JsonSerializerOptions SerializerOptions = new(JsonSerializerDefaults.Web)
     {
@@ -21,16 +22,23 @@ public sealed class AgentLocalHttpServer
     };
 
     private readonly AgentCommandDispatcher _dispatcher;
+    private readonly string? _expectedToken;
 
-    public AgentLocalHttpServer(AgentCommandDispatcher dispatcher)
+    public AgentLocalHttpServer(AgentCommandDispatcher dispatcher, string? bridgeToken = null, int port = Port)
     {
         _dispatcher = dispatcher ?? throw new ArgumentNullException(nameof(dispatcher));
+        // When a token is provisioned (normal desktop installs), every command
+        // endpoint requires the exact value; /ping stays open so reachability
+        // checks keep working. Without one (tests, bare runs) only the Origin
+        // and Host guards apply.
+        _expectedToken = string.IsNullOrWhiteSpace(bridgeToken) ? null : bridgeToken;
+        _port = port;
     }
 
     public async Task RunAsync(CancellationToken cancellationToken)
     {
         var listener = new HttpListener();
-        listener.Prefixes.Add($"http://127.0.0.1:{Port}/");
+        listener.Prefixes.Add($"http://127.0.0.1:{_port}/");
         try
         {
             listener.Start();
@@ -117,8 +125,8 @@ public sealed class AgentLocalHttpServer
         // above already blocks browser CSRF; this closes the residual gap for
         // tooling that omits Origin.)
         string? host = context.Request.Headers["Host"];
-        if (!string.Equals(host, "127.0.0.1:27410", StringComparison.OrdinalIgnoreCase) &&
-            !string.Equals(host, "localhost:27410", StringComparison.OrdinalIgnoreCase))
+        if (!string.Equals(host, $"127.0.0.1:{_port}", StringComparison.OrdinalIgnoreCase) &&
+            !string.Equals(host, $"localhost:{_port}", StringComparison.OrdinalIgnoreCase))
         {
             context.Response.StatusCode = 403;
             context.Response.Close();
@@ -138,6 +146,16 @@ public sealed class AgentLocalHttpServer
         if (path == "/ping" && context.Request.HttpMethod == "GET")
         {
             await WriteJsonAsync(context, new { healthy = true }).ConfigureAwait(false);
+            return;
+        }
+
+        // Everything below is a command endpoint: require the shared token
+        // (constant-time compare) when one is provisioned.
+        if (_expectedToken is not null &&
+            !BridgeTokenFile.IsValid(context.Request.Headers["X-Correntra-Token"], _expectedToken))
+        {
+            context.Response.StatusCode = 401;
+            context.Response.Close();
             return;
         }
 

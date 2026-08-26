@@ -1,6 +1,5 @@
-﻿using Avalonia;
 using System;
-
+using Avalonia;
 using Correntra.Infrastructure.Ipc;
 using Velopack;
 

@@ -19,6 +19,12 @@ jobs:
         run: dotnet restore Correntra.sln --locked-mode
       - name: Documentation consistency check
         run: powershell -ExecutionPolicy Bypass -File scripts/check-docs.ps1
+      - name: Formatting check (dotnet format)
+        run: dotnet format Correntra.sln --verify-no-changes --severity warn
+      - name: License gate (SBOM + forbidden-license scan)
+        run: |
+          New-Item -ItemType Directory -Force -Path artifacts\sbom | Out-Null
+          dotnet CycloneDX Correntra.sln -o artifacts\sbom --json --exclude-dev
+          powershell -ExecutionPolicy Bypass -File scripts/check-licenses.ps1
       - name: Test .NET
         run: dotnet test Correntra.sln -c Release --no-restore
-

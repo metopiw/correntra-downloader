@@ -22,7 +22,6 @@
     <ProjectReference Include="..\..\src\Correntra.Media\Correntra.Media.csproj" />
     <ProjectReference Include="..\..\src\Correntra.Infrastructure\Correntra.Infrastructure.csproj" />
     <ProjectReference Include="..\..\src\Correntra.Agent\Correntra.Agent.csproj" />
-    <ProjectReference Include="..\..\src\Correntra.NativeHost\Correntra.NativeHost.csproj" />
   </ItemGroup>
 
 </Project>

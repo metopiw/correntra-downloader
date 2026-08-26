@@ -3,9 +3,9 @@ using Avalonia.Controls;
 using Avalonia.Controls.Shapes;
 using Avalonia.Input;
 using Avalonia.Media;
+using Correntra.Core.Ipc;
 using Correntra.Desktop.Models;
 using Correntra.Desktop.ViewModels;
-using Correntra.Core.Ipc;
 
 namespace Correntra.Desktop.Views;
 

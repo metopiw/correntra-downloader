@@ -114,8 +114,11 @@ Copy-Item -LiteralPath (Join-Path $repositoryRoot "artifacts\sbom\bom.json") -De
 Copy-Item -LiteralPath (Join-Path $repositoryRoot "packaging\UZANTI-KURULUMU.txt") -Destination $applicationRoot -Force
 
 # Ship the browser extension next to the app so the in-app setup wizard can
-# point "Load unpacked" at it without any download.
-Copy-Item -LiteralPath (Join-Path $repositoryRoot "browser-extension") -Destination (Join-Path $applicationRoot "browser-extension") -Recurse -Force
+# point "Load unpacked" at it without any download. The per-run bridge token
+# must NOT ship: it is a secret the agent regenerates on every start.
+$stagedExtension = Join-Path $applicationRoot "browser-extension"
+Copy-Item -LiteralPath (Join-Path $repositoryRoot "browser-extension") -Destination $stagedExtension -Recurse -Force
+Remove-Item -LiteralPath (Join-Path $stagedExtension "bridge-token.txt") -Force -ErrorAction SilentlyContinue
 
 $portablePath = Join-Path $releaseRoot "Correntra-Downloader-$Version-win-x64-portable.zip"
 $sbomPath = Join-Path $releaseRoot "Correntra-Downloader-$Version-sbom.cdx.json"
