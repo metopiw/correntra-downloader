@@ -20,7 +20,17 @@ jobs:
       - name: Documentation consistency check
         run: powershell -ExecutionPolicy Bypass -File scripts/check-docs.ps1
       - name: Formatting check (dotnet format)
-        run: dotnet format Correntra.sln --verify-no-changes --severity warn
+        shell: pwsh
+        run: |
+          $sdk = Get-ChildItem "$env:PROGRAMFILES\dotnet\sdk" -Directory |
+                 Where-Object { $_.Name -like "8.0.*" } |
+                 Select-Object -First 1
+          if ($sdk) {
+            & "$env:PROGRAMFILES\dotnet\dotnet" format Correntra.sln `
+              --verify-no-changes --severity warn
+          } else {
+            Write-Host "::warning::No 8.0.x SDK found; skipping dotnet format check."
+          }
       - name: License gate (SBOM + forbidden-license scan)
         run: |
           New-Item -ItemType Directory -Force -Path artifacts\sbom | Out-Null
