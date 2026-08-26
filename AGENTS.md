@@ -92,6 +92,11 @@ Browser integration is the unpacked Manifest V3 extension in
 - Every code change must ship with an updated `CHANGELOG.md` entry (under
   Unreleased / next-version heading) and a push to origin — the maintainer
   treats both as part of done.
+- **Auto-push is enforced by git, not by memory**: `core.hooksPath` points at
+  `scripts/hooks`, whose post-commit hook pushes to origin after EVERY commit
+  (safe-fail: warns on offline/diverged instead of blocking). Never delete or
+  bypass this hook. Do not run long batches of commits expecting to "push at
+  the end" — each commit lands on GitHub immediately.
 
 ## Coding conventions
 
