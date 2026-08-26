@@ -73,10 +73,20 @@ Browser integration is the unpacked Manifest V3 extension in
 
 ## Licensing gates
 
+- **The project itself is FSL-1.1-MIT** (Functional Source License; converts
+  to MIT two years after each version) since 2026-08-25 — see LICENSE.txt.
+  Competing commercial use is prohibited for everyone including contributors.
 - FFmpeg sidecar must stay LGPL-only; `scripts/get-ffmpeg.ps1` rejects
   `--enable-gpl`/`--enable-nonfree` builds. yt-dlp is Unlicense. Never add
   GPL/AGPL/SSPL or non-commercial-only dependencies. Keep
   `THIRD-PARTY-NOTICES.md` and `CHANGELOG.md` in sync with changes.
+- FFmpeg is pinned to an **immutable dated autobuild tag**
+  (`autobuild-2026-08-24-13-10`), NOT the rolling `latest` tag whose assets
+  are replaced in place and break checksum verification. To upgrade: pick a
+  new dated tag, update tag/name/sha256 together in `get-ffmpeg.ps1`.
+- Every code change must ship with an updated `CHANGELOG.md` entry (under
+  Unreleased / next-version heading) and a push to origin — the maintainer
+  treats both as part of done.
 
 ## Coding conventions
 
@@ -85,6 +95,15 @@ Browser integration is the unpacked Manifest V3 extension in
   validation at IPC boundaries (`AgentCommandDispatcher` is the reference).
 - Extension TS: strict, no DOM libraries beyond Chrome types; overlay UI is
   isolated in a closed ShadowRoot and must survive hostile page CSS.
+- User-visible strings go through `LocalizationService` in **both** Turkish
+  and English; a key missing from one dictionary falls back silently.
+- The browser extension ships inside the app (`browser-extension/` next to
+  Correntra.exe) and is activated via the first-run `ExtensionSetupDialog`
+  wizard (Settings → Browser can reopen it). Do not remove the folder copy
+  step from `scripts/release.ps1` — the wizard depends on it.
+- Avalonia gotchas: incremental builds can emit "No precompiled XAML" at
+  runtime — clean-rebuild before launching. `TranslateY`/`StrokeLineJoin`
+  style setters are not supported on Window/Polyline.
 - Prefer editing existing files; keep comments explaining *why* (failure
   modes, not intent).
 
