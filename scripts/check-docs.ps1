@@ -29,6 +29,11 @@ foreach ($doc in $docs) {
             if ($candidate -match '\*' -or $candidate -match '<' ) { continue }
             $full = Join-Path $repoRoot $candidate
             if (-not (Test-Path -LiteralPath $full)) {
+                # Gitignored runtime artifacts (generated at app start) are
+                # legitimately referenced by docs although absent from a
+                # fresh checkout.
+                git check-ignore -q -- "$candidate" 2>$null
+                if ($LASTEXITCODE -eq 0) { continue }
                 $failures.Add("$($doc.Name):$($i + 1) references missing path '$candidate'")
             }
         }
