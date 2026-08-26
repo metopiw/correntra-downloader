@@ -1,4 +1,5 @@
 using System.Text.Json;
+using Correntra.Core;
 using Microsoft.Win32;
 
 namespace Correntra.Platform.Windows.Browser;
@@ -11,7 +12,7 @@ public sealed record NativeMessagingRegistration(
 public static class NativeMessagingRegistrar
 {
     public const string HostName = "com.correntra.downloader";
-    public const string ExtensionId = "fbngehclfngjenhlchnkojooliaifggj";
+    public const string ExtensionId = BrowserExtensionIdentity.ExtensionId;
 
     private static readonly string[] RegistryPaths =
     [

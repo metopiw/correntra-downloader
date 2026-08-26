@@ -6,6 +6,26 @@ One paragraph per decision: context → choice → consequence.
 
 ---
 
+## 2026-08-26 — Extension identity is pinned (fixed manifest key + exact Origin match)
+
+**Context:** The bridge accepted any `chrome-extension://` Origin, so a
+malicious browser extension could invoke it. A fixed ID was impossible before
+because unpacked installs derive the ID from the folder path.
+
+**Decision:** Embed a fixed RSA `key` in `browser-extension/manifest.json`;
+Chrome now derives the canonical ID `bhnibkknmmodoehpaeoijnkabfdmbdjp` on
+every machine (`Correntra.Core.BrowserExtensionIdentity`). Both the loopback
+HTTP bridge and the native validator match that exact Origin — no prefixes.
+The old path-derived ID `fbngehc…` is retired; users must reload the
+extension once after updating.
+
+**Consequence:** Any other extension or web page receives 403. The remaining
+accepted gap: local non-browser processes can still call without an Origin
+(by design, for curl/tests) — a shared-secret handshake was considered and
+deferred. Key regeneration requires touching 4 files together (see AGENTS.md).
+
+---
+
 ## 2026-08-25 — Browser extension ships inside the app + first-run wizard
 
 **Context:** The installer never contained the extension; users had to find

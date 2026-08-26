@@ -37,6 +37,13 @@ Browser integration is the unpacked Manifest V3 extension in
   `scripts/test-bridge.ps1` (or curl). **Never reintroduce Chrome native
   messaging** for this: it proved untestable from the agent side and fragile
   on this machine (manifest allowed_origins, extension IDs, silent failures).
+  **Extension identity is pinned**: `browser-extension/manifest.json` carries
+  a fixed `key`, so the ID is always `bhnibkknmmodoehpaeoijnkabfdmbdjp`
+  (`Correntra.Core.BrowserExtensionIdentity`). The HTTP bridge and the native
+  validator accept ONLY that exact `chrome-extension://<id>/` Origin; any
+  other extension or web page gets 403. If you ever regenerate the key, you
+  must update it in four places together: manifest, BrowserExtensionIdentity,
+  tests, and `packaging/UZANTI-KURULUMU.txt`.
 - Full dev launch: `baslat.bat` → `scripts/dev-start.ps1` (builds solution,
   deploys `yt-dlp.exe`/ffmpeg into both bin outputs, starts agent + desktop).
 - Social/video URLs are supported through the desktop app: Add URL with a

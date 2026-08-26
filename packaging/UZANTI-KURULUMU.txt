@@ -12,7 +12,7 @@ Uzanti Chrome Web Store'a yuklenmez. Correntra klasorundeki
 5. Correntra'yi bir kez calistirin. Yerel mesajlasma baglantisi kullanici
    hesabiniz icin otomatik kaydedilir.
 
-Sabit uzanti kimligi: fbngehclfngjenhlchnkojooliaifggj
+Sabit uzanti kimligi: bhnibkknmmodoehpaeoijnkabfdmbdjp
 
 Uzanti ana anahtarini kapattiginiz anda yeni indirmeleri tarayici devralir.
 Site bazli anahtar yalnizca acik alan adi icin yakalamayi kapatir.

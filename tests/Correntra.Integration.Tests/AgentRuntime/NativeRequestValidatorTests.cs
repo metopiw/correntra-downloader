@@ -1,4 +1,5 @@
 using System.Text.Json;
+using Correntra.Core;
 using Correntra.NativeHost.Protocol;
 
 namespace Correntra.Integration.Tests.AgentRuntime;
@@ -83,21 +84,26 @@ public sealed class NativeRequestValidatorTests
     }
 
     [Fact]
-    public void AcceptsAnyChromeExtensionOriginAndRejectsMalformed()
+    public void AcceptsOnlyPinnedExtensionOrigin()
     {
-        // Stable Web Store ID and any unpacked (sideloaded) ID are both accepted.
-        NativeRequestValidator.ValidateCallerOrigin("chrome-extension://fbngehclfngjenhlchnkojooliaifggj/");
-        NativeRequestValidator.ValidateCallerOrigin("chrome-extension://ddkjiahejlhfcafbddmgiahcphecmpfh/");
+        // Only the canonical pinned ID is accepted (the manifest's fixed key
+        // makes this ID stable across unpacked installs).
+        NativeRequestValidator.ValidateCallerOrigin(BrowserExtensionIdentity.ExtensionOrigin);
 
-        // Wrong scheme, missing trailing slash, bad ID shape, or a non-extension URL are rejected.
+        // Any other well-formed extension origin — including the historical
+        // development-path-derived ID and near-miss spellings — is rejected.
+        Assert.Throws<UnauthorizedAccessException>(() =>
+            NativeRequestValidator.ValidateCallerOrigin("chrome-extension://fbngehclfngjenhlchnkojooliaifggj/"));
+        Assert.Throws<UnauthorizedAccessException>(() =>
+            NativeRequestValidator.ValidateCallerOrigin("chrome-extension://ddkjiahejlhfcafbddmgiahcphecmpfh/"));
         Assert.Throws<UnauthorizedAccessException>(() =>
             NativeRequestValidator.ValidateCallerOrigin("https://example.test/"));
         Assert.Throws<UnauthorizedAccessException>(() =>
-            NativeRequestValidator.ValidateCallerOrigin("chrome-extension://fbngehclfngjenhlchnkojooliaifggj"));
+            NativeRequestValidator.ValidateCallerOrigin("chrome-extension://bhnibkknmmodoehpaeoijnkabfdmbdjp"));
         Assert.Throws<UnauthorizedAccessException>(() =>
             NativeRequestValidator.ValidateCallerOrigin("chrome-extension://zzzz/"));
         Assert.Throws<UnauthorizedAccessException>(() =>
-            NativeRequestValidator.ValidateCallerOrigin("chrome-extension://fbngehclfngjenhlchnkojooliaifggz/"));
+            NativeRequestValidator.ValidateCallerOrigin("chrome-extension://bhnibkknmmodoehpaeoijnkabfdmbdjz/"));
     }
 
     private static JsonDocument Parse(string json) => JsonDocument.Parse(json);

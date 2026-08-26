@@ -1,13 +1,14 @@
 using System.Globalization;
 using System.Text.Json;
 using System.Text.RegularExpressions;
+using Correntra.Core;
 using Correntra.Core.Security;
 
 namespace Correntra.NativeHost.Protocol;
 
 public sealed partial class NativeRequestValidator
 {
-    public const string AllowedExtensionId = "fbngehclfngjenhlchnkojooliaifggj";
+    public const string AllowedExtensionId = BrowserExtensionIdentity.ExtensionId;
     private static readonly HashSet<string> EnvelopeProperties =
         new(StringComparer.Ordinal) { "protocolVersion", "kind", "requestId", "timestampUtc", "payload" };
     private static readonly HashSet<string> AllowedKinds =
@@ -108,23 +109,17 @@ public sealed partial class NativeRequestValidator
     }
 
     /// <summary>
-    /// Accepts any <c>chrome-extension://&lt;32-char a-p id&gt;/</c> origin. Chrome passes
-    /// the calling extension's origin to the native messaging host automatically; because
-    /// an unpacked (sideloaded) extension receives an unpredictable ID, matching against
-    /// the single stable Web Store ID would reject valid development installs. Matching on
-    /// the exact <c>chrome-extension</c> scheme plus the 32-character ID shape still
-    /// restricts invocation to genuine Chrome/Edge extensions.
+    /// Accepts only the canonical extension origin <c>chrome-extension://&lt;id&gt;/</c>.
+    /// The packaged manifest pins a fixed <c>key</c>, so Chrome derives the same
+    /// 32-character ID on every install (unpacked or not) and the bridge can
+    /// match it exactly instead of trusting any well-formed extension origin.
     /// </summary>
     private static bool IsAllowedExtensionOrigin(string origin)
     {
-        if (!origin.StartsWith("chrome-extension://", StringComparison.Ordinal) ||
-            !origin.EndsWith('/'))
-        {
-            return false;
-        }
-
-        string id = origin["chrome-extension://".Length..^1];
-        return id.Length == 32 && id.All(static character => character is >= 'a' and <= 'p');
+        return string.Equals(
+            origin,
+            BrowserExtensionIdentity.ExtensionOrigin,
+            StringComparison.Ordinal);
     }
 
     private static void ValidateTakeover(JsonElement payload)

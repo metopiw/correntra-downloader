@@ -28,7 +28,9 @@ disabled.
 - Output paths are canonicalised under an approved destination; reserved device
   names, traversal, alternate streams, and control characters are rejected.
 - The Agent loopback HTTP bridge (`127.0.0.1:27410`) accepts only missing
-  Origin (local tools) or `chrome-extension://` Origin. Web pages receive 403.
+  Origin (local tools) or the pinned extension Origin
+  `chrome-extension://bhnibkknmmodoehpaeoijnkabfdmbdjp/` — matched exactly,
+  not by prefix. Web pages and any other browser extension receive 403.
 - Named pipes to the Desktop remain restricted to the current user.
 - Downloaded files receive Windows Mark-of-the-Web where applicable and are not
   executed automatically.

@@ -4,6 +4,14 @@ All notable changes to Correntra Downloader are recorded here. Dates are UTC.
 
 ## Unreleased
 
+### Security
+- **The browser bridge now accepts only the genuine Correntra extension.**
+  The extension's identity is pinned via a fixed key in its manifest, so its
+  ID is identical on every install, and the local HTTP bridge matches that
+  exact Origin — any *other* browser extension or web page is rejected with
+  403 instead of any `chrome-extension://` origin being trusted. After
+  updating, reload the extension once (`chrome://extensions` → refresh icon).
+
 ### Added
 - **First-run browser extension setup wizard**: the installer now ships
   `browser-extension/` next to the app and, when capture is not yet live,

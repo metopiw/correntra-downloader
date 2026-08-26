@@ -1,6 +1,7 @@
 using System.Net;
 using System.Text;
 using System.Text.Json;
+using Correntra.Core;
 
 namespace Correntra.Agent.Runtime;
 
@@ -99,8 +100,11 @@ public sealed class AgentLocalHttpServer
         string? origin = context.Request.Headers["Origin"];
         // Browsers always send an Origin for cross-origin fetches; a web page
         // origin must never reach the bridge. Local tools (curl, tests) send
-        // none and the extension sends chrome-extension://.
-        if (origin is not null && !origin.StartsWith("chrome-extension://", StringComparison.OrdinalIgnoreCase))
+        // none and the extension sends its pinned chrome-extension:// origin.
+        // The manifest's fixed key makes the ID identical on every install, so
+        // a full match is safe — any other extension is rejected with 403.
+        if (origin is not null &&
+            !string.Equals(origin, BrowserExtensionIdentity.ExtensionOrigin, StringComparison.Ordinal))
         {
             context.Response.StatusCode = 403;
             context.Response.Close();
@@ -188,7 +192,8 @@ public sealed class AgentLocalHttpServer
 
     private static void ApplyCors(HttpListenerResponse response, string? origin)
     {
-        if (origin is null || !origin.StartsWith("chrome-extension://", StringComparison.OrdinalIgnoreCase))
+        if (origin is null ||
+            !string.Equals(origin, BrowserExtensionIdentity.ExtensionOrigin, StringComparison.Ordinal))
         {
             return;
         }

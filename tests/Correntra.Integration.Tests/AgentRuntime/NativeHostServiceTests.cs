@@ -21,7 +21,7 @@ public sealed class NativeHostServiceTests
         });
         await using var output = new MemoryStream();
 
-        await service.RunAsync(input, output, "chrome-extension://fbngehclfngjenhlchnkojooliaifggj/", once: true);
+        await service.RunAsync(input, output, "chrome-extension://bhnibkknmmodoehpaeoijnkabfdmbdjp/", once: true);
 
         Assert.Equal("host.ping", fakeAgent.LastRequest?.Kind);
         output.Position = 0;
