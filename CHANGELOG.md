@@ -2,6 +2,24 @@
 
 All notable changes to Correntra Downloader are recorded here. Dates are UTC.
 
+## Unreleased
+
+### Added
+- **First-run browser extension setup wizard**: the installer now ships
+  `browser-extension/` next to the app and, when capture is not yet live,
+  Correntra opens a guided dialog — detects Chrome/Edge/Brave, opens the
+  extension folder, copies its path to the clipboard, launches
+  `chrome://extensions`, and walks through "Load unpacked" in Turkish or
+  English. A status dot turns green the moment the extension first reaches
+  the agent. Reopenable from Settings → Browser ("Set up / repair the
+  extension…").
+
+### Fixed
+- Release pipeline: `gh release upload` now enumerates files explicitly
+  (PowerShell does not expand globs for external commands).
+- `scripts/release.ps1` copies `browser-extension/` into staging — the
+  installed app previously contained no extension files at all.
+
 ## 0.4.0 — 2026-08-25
 
 ### Added
