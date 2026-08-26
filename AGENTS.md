@@ -2,6 +2,11 @@
 
 > **Communication:** Keep answers short (2-4 lines) unless user asks for detail. No code dumps unless requested.
 
+> **Reading order for a new agent:** this file → `docs/DECISIONS.md` (why
+> things are the way they are; never re-litigate a settled decision) →
+> `CHANGELOG.md` (what changed recently). The maintainer does not read code;
+> explain outcomes, not implementation.
+
 Correntra is an IDM-class download manager: Avalonia desktop shell
 (`src/Correntra.Desktop`), a background transfer agent
 (`src/Correntra.Agent`), a segmented HTTP engine (`src/Correntra.Transfer`),
