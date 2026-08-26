@@ -17,6 +17,8 @@ jobs:
         run: dotnet tool restore
       - name: Restore .NET dependencies
         run: dotnet restore Correntra.sln --locked-mode
+      - name: Documentation consistency check
+        run: powershell -ExecutionPolicy Bypass -File scripts/check-docs.ps1
       - name: Test .NET
         run: dotnet test Correntra.sln -c Release --no-restore
 

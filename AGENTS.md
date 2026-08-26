@@ -7,6 +7,14 @@
 > `CHANGELOG.md` (what changed recently). The maintainer does not read code;
 > explain outcomes, not implementation.
 
+> **Session-close protocol (mandatory, every session):** before ending work,
+> 1) update `CHANGELOG.md` (Unreleased section) with user-visible changes,
+> 2) add any new "why" to `docs/DECISIONS.md`, refresh stale claims in this
+> file, 3) run `powershell -ExecutionPolicy Bypass -File scripts/check-docs.ps1`
+> — it fails on docs that reference deleted paths, a CHANGELOG missing the
+> current version, or removed anchor sections. Fix what it reports; CI runs
+> the same gate and will go red after you leave.
+
 Correntra is an IDM-class download manager: Avalonia desktop shell
 (`src/Correntra.Desktop`), a background transfer agent
 (`src/Correntra.Agent`), a segmented HTTP engine (`src/Correntra.Transfer`),

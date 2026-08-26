@@ -1,0 +1,31 @@
+#!/bin/sh
+# Auto-push after every commit.
+# Maintainer requirement: the GitHub mirror must never lag behind local work,
+# regardless of which coding agent (or human) makes the commit.
+#
+# Installed via: git config core.hooksPath scripts/hooks
+# Safe-fail design: a failed push (offline, diverged) warns but never blocks
+# or rolls back the commit itself.
+
+branch=$(git rev-parse --abbrev-ref HEAD 2>/dev/null)
+
+# Detached HEAD (rebase, checkout of sha): nothing sane to push.
+if [ -z "$branch" ] || [ "$branch" = "HEAD" ]; then
+    exit 0
+fi
+
+# Never fight an interactive rebase / am session.
+gitdir=$(git rev-parse --git-dir)
+if [ -d "$gitdir/rebase-merge" ] || [ -d "$gitdir/rebase-apply" ]; then
+    exit 0
+fi
+
+if ! git push origin "$branch" >/dev/null 2>&1; then
+    echo ""
+    echo "  [auto-push] WARNING: could not push '$branch' to origin."
+    echo "  [auto-push] Likely offline or remote moved ahead."
+    echo "  [auto-push] Fix with: git pull --rebase && git push"
+    echo ""
+fi
+
+exit 0
