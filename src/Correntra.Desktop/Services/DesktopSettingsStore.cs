@@ -71,8 +71,6 @@ public sealed class DesktopSettings
 
     public string? VirusTotalApiKey { get; set; }
 
-    public bool ExtensionSetupShown { get; set; }
-
     public bool CheckUpdatesAtStartup { get; set; } = true;
 
     public bool IncludePrereleases { get; set; }

@@ -2,6 +2,25 @@
 
 All notable changes to Correntra Downloader are recorded here. Dates are UTC.
 
+## 0.4.2 — 2026-09-11
+
+### Fixed
+- **The extension setup wizard never appeared for fresh installs.** It was
+  gated on a "shown once" flag that persisted across reinstalls, and it
+  checked the desktop↔agent pipe instead of the actual browser extension.
+  The flag is gone: the wizard now shows whenever the genuine extension has
+  not reached the agent (~10 s after launch), every launch, until it does.
+- **"Extension connected" status was lying.** The status bar turned green
+  as soon as the desktop reached the agent, whether or not the extension
+  existed. It now reflects verified extension contact reported by the agent
+  (pinned origin + bridge token both required).
+- **The extension never announced itself while idle**, so the new signal
+  would stay dark forever. It now sends an authenticated lightweight
+  heartbeat every minute, which also re-reads the per-run bridge token so
+  an agent restart recovers within a minute.
+- CORS preflight on the bridge now allows the `X-Correntra-Token` header
+  (the browser would previously block the token-authenticated call).
+
 ## 0.4.1 — 2026-08-26
 
 ### Changed

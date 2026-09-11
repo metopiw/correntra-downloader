@@ -21,23 +21,18 @@ const CAPTURE_LOG_LIMIT = 20;
 
 // Shared secret the agent writes into our own extension folder on every
 // start (bridge-token.txt). Only code running on our pinned chrome-extension
-// origin can fetch() it; web pages and other extensions cannot.
-let bridgeTokenPromise = null;
-function getBridgeToken() {
-  if (!bridgeTokenPromise) {
-    bridgeTokenPromise = (async () => {
-      try {
-        const url = chrome.runtime.getURL("bridge-token.txt");
-        const r = await fetch(url, { cache: "no-store" });
-        if (!r.ok) return null;
-        return (await r.text()).trim() || null;
-      } catch {
-        return null;
-      }
-    })();
-    bridgeTokenPromise.catch(() => {});
+// origin can fetch() it; web pages and other extensions cannot. Re-read per
+// call: the agent regenerates the token on every start and a long-lived
+// service worker must not cache a stale value.
+async function getBridgeToken() {
+  try {
+    const url = chrome.runtime.getURL("bridge-token.txt");
+    const r = await fetch(url, { cache: "no-store" });
+    if (!r.ok) return null;
+    return (await r.text()).trim() || null;
+  } catch {
+    return null;
   }
-  return bridgeTokenPromise;
 }
 
 async function agentHeaders() {
@@ -128,6 +123,27 @@ try {
       chrome.runtime.getPlatformInfo(() => {});
     }
   });
+} catch {}
+
+// ---------------------------------------------------------------------------
+// Heartbeat: an authenticated GET /jobs every ~1 min (and once at SW start)
+// so the desktop can tell "extension installed" from "extension missing".
+// The agent records the last verified extension contact and drives the
+// status bar + setup wizard from it. The SW cold-start beat also re-reads
+// the bridge token, so an agent restart with a fresh token recovers within
+// a minute even while the browser stays open.
+// ---------------------------------------------------------------------------
+async function heartbeat() {
+  try {
+    const headers = await agentHeaders();
+    if (!headers["X-Correntra-Token"]) return; // Agent not provisioned yet.
+    await fetch(AGENT + "/jobs", { cache: "no-store", headers, signal: AbortSignal.timeout(3000) });
+  } catch {}
+}
+try {
+  chrome.alarms.create("cc-heartbeat", { periodInMinutes: 1 });
+  chrome.alarms.onAlarm.addListener((a) => { if (a && a.name === "cc-heartbeat") void heartbeat(); });
+  void heartbeat();
 } catch {}
 
 // ---------------------------------------------------------------------------

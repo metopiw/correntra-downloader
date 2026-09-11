@@ -154,7 +154,8 @@ public sealed record AgentSnapshot : IIpcResponse
         DateTimeOffset generatedAtUtc,
         IEnumerable<DownloadJobSnapshot> jobs,
         IEnumerable<QueueSnapshot>? queues = null,
-        long aggregateBytesPerSecond = 0)
+        long aggregateBytesPerSecond = 0,
+        DateTimeOffset? browserExtensionLastSeenUtc = null)
     {
         ArgumentOutOfRangeException.ThrowIfNegative(aggregateBytesPerSecond);
 
@@ -167,6 +168,7 @@ public sealed record AgentSnapshot : IIpcResponse
         }
 
         AggregateBytesPerSecond = aggregateBytesPerSecond;
+        BrowserExtensionLastSeenUtc = browserExtensionLastSeenUtc;
     }
 
     public string Type => "agent.snapshot";
@@ -178,6 +180,13 @@ public sealed record AgentSnapshot : IIpcResponse
     public ImmutableArray<QueueSnapshot> Queues { get; }
 
     public long AggregateBytesPerSecond { get; }
+
+    /// <summary>
+    /// Last time the browser extension talked to the agent over the loopback
+    /// bridge, or null when it never has. Lets the desktop tell "extension
+    /// missing" from "agent fine, just no extension".
+    /// </summary>
+    public DateTimeOffset? BrowserExtensionLastSeenUtc { get; }
 }
 
 public sealed record JobChangedEvent : IIpcEvent

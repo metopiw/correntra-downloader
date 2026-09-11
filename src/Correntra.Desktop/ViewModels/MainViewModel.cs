@@ -157,6 +157,10 @@ public partial class MainViewModel : ViewModelBase
     public void ApplyAgentSnapshot(AgentSnapshot snapshot)
     {
         ArgumentNullException.ThrowIfNull(snapshot);
+        // The snapshot's extension-activity clock is the truth for the status
+        // bar: green only when the genuine extension actually reached the
+        // agent this run, not merely when the desktop↔agent pipe is alive.
+        IsBrowserCaptureConnected = snapshot.BrowserExtensionLastSeenUtc is not null;
         string? selectedId = SelectedDownload?.JobId;
         var liveIds = new HashSet<string>(StringComparer.Ordinal);
         var aggregateSpeed = 0L;
@@ -283,7 +287,6 @@ public partial class MainViewModel : ViewModelBase
 
     public void ReportAgentCommandResult(bool accepted, string? reason)
     {
-        IsBrowserCaptureConnected = true;
         StatusMessage = accepted
             ? localizer["Status.CommandAccepted"]
             : string.Format(

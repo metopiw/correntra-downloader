@@ -159,6 +159,11 @@ public sealed class AgentLocalHttpServer
             return;
         }
 
+        // Past both gates (origin pinning above, token here): this really is
+        // the genuine extension. Record it so the desktop's setup wizard and
+        // status bar can tell "extension missing" from "agent unreachable".
+        BrowserExtensionActivity.MarkSeen();
+
         if (path == "/jobs" && context.Request.HttpMethod == "GET")
         {
             using JsonDocument empty = JsonDocument.Parse("{}");
@@ -218,7 +223,7 @@ public sealed class AgentLocalHttpServer
 
         response.Headers.Set("Access-Control-Allow-Origin", origin);
         response.Headers.Set("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
-        response.Headers.Set("Access-Control-Allow-Headers", "content-type");
+        response.Headers.Set("Access-Control-Allow-Headers", "content-type, x-correntra-token");
         response.Headers.Set("Access-Control-Allow-Private-Network", "true");
         response.Headers.Set("Vary", "Origin");
     }

@@ -6,6 +6,32 @@ One paragraph per decision: context → choice → consequence.
 
 ---
 
+## 2026-09-11 — Setup wizard driven by real extension activity, not flags
+
+**Context:** Fresh installs never saw the extension setup wizard. Two
+independent bugs: a "shown once" setting persisted in AppData across
+reinstalls, and the gate watched the desktop↔agent pipe (always up) rather
+than the extension. Also, the extension was silent while idle, so any
+real signal would have stayed dark; and the CORS preflight did not allow
+the X-Correntra-Token header.
+
+**Decision:** The agent tracks last verified extension contact
+(`BrowserExtensionActivity` — updated only when a request clears BOTH the
+pinned-origin and bridge-token gates) and exposes it in every snapshot
+(`AgentSnapshot.BrowserExtensionLastSeenUtc`). The desktop derives its
+status and the wizard purely from that clock: no persisted flags; wizard
+shows once per launch when the extension has not been verified ~10 s after
+start. The extension sends an authenticated GET /jobs heartbeat every
+minute and re-reads the token file per call (agent restarts regenerate
+it). `ExtensionSetupShown` setting removed entirely.
+
+**Consequence:** A user who deliberately disables the extension sees the
+wizard on every launch — accepted as honest behaviour. Reinstalling the
+app can no longer hide the wizard. The status bar can no longer show
+green without a verified extension this agent run.
+
+---
+
 ## 2026-08-26 — Bridge shared token; native messaging host deleted
 
 **Context:** Origin pinning alone cannot stop other local processes (any of

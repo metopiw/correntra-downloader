@@ -300,7 +300,10 @@ public sealed class DownloadJobCoordinator : IAsyncDisposable
     public async Task<AgentSnapshot> GetSnapshotAsync(CancellationToken cancellationToken = default)
     {
         IReadOnlyList<AgentJobRecord> jobs = await _repository.ListAsync(cancellationToken).ConfigureAwait(false);
-        return new AgentSnapshot(DateTimeOffset.UtcNow, jobs.Select(static job => job.ToSnapshot()));
+        return new AgentSnapshot(
+            DateTimeOffset.UtcNow,
+            jobs.Select(static job => job.ToSnapshot()),
+            browserExtensionLastSeenUtc: BrowserExtensionActivity.LastSeenUtc);
     }
 
     public async ValueTask DisposeAsync()
