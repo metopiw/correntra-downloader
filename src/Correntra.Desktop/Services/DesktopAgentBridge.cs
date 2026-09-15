@@ -440,13 +440,14 @@ public sealed class DesktopAgentBridge : IAsyncDisposable
                     string.Equals(item.Id.ToString(), jobId, StringComparison.OrdinalIgnoreCase));
                 if (job is null)
                 {
-                    // The Agent might not have registered the job yet; re-queue and
-                    // let the next polling cycle pick it up.
-                    if (snapshot is not null)
-                    {
-                        pendingConfirmationSet.TryAdd(jobId, 0);
-                        pendingConfirmations.Enqueue(jobId);
-                    }
+                    // The Agent might not have registered the job yet, or this
+                    // call came from the activation wake-up before the first
+                    // snapshot arrived (snapshot is null). Re-queue either way:
+                    // dropping the wake-up relied solely on the next poll to
+                    // re-enqueue, so a slow/failed snapshot lost the prompt.
+                    // The set dedupes, and the loop breaks after re-queuing.
+                    pendingConfirmationSet.TryAdd(jobId, 0);
+                    pendingConfirmations.Enqueue(jobId);
 
                     break;
                 }
@@ -568,7 +569,13 @@ public sealed class DesktopAgentBridge : IAsyncDisposable
     }
 
     private static bool IsRecoverableConnectionException(Exception exception) =>
-        exception is IOException or TimeoutException or JsonException or InvalidOperationException;
+        // InvalidDataException is the shape of a rejected snapshot (the pipe
+        // answered Accepted:false, e.g. one corrupt job row failed
+        // validation). Treating it as fatal killed the 1 s poll loop forever
+        // and no save-confirmation dialog ever appeared again; degrade to the
+        // offline banner and keep polling instead.
+        exception is IOException or TimeoutException or JsonException or InvalidOperationException or
+            InvalidDataException;
 
     private static async Task IgnoreExpectedShutdownAsync(Task? task)
     {

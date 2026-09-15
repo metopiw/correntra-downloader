@@ -27,6 +27,29 @@ regeneration still touches the same 4 files; this fix changes comparison only.
 
 ---
 
+## 2026-09-15 — One corrupt job row must not hide every save confirmation
+
+**Context:** Takeovers were accepted (extension: "devredildi") but the
+desktop never prompted — for video qualities and plain files alike. The DB
+held the new NeedsInput rows, yet HTTP `/jobs` returned `[]`. Root cause: a
+playlist row stored bytes_transferred (170 MB) above total_bytes (12 MB);
+record/snapshot validation rejects bytes > total, `ListAsync` had no per-row
+guard, so the entire snapshot threw, dispatch returned Rejected, and the
+desktop poll loop (which treated the resulting InvalidDataException as
+fatal) died on the spot.
+
+**Decision:** Read path widens total to bytes when overshot and skips other
+malformed rows (validation still guards all writes); `UpdateProgressAsync`
+clamps bytes > total on write; desktop treats a rejected snapshot as
+recoverable (offline banner, keep polling); activation wake-ups re-queue
+instead of dropping when no snapshot is in hand.
+
+**Consequence:** A corrupt row disappears from (or self-heals in) the list
+instead of hiding healthy jobs. Never make `ListAsync` fail the whole list
+on one row again; never let poll-loop exceptions escape `PollAsync`.
+
+---
+
 ## 2026-09-15 — yt-dlp sidecar updates are explicit and scoped to Correntra
 
 **Context:** Video-site extractors can change between Correntra releases, so

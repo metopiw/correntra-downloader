@@ -93,7 +93,25 @@ public sealed class AgentJobRepository
         await using SqliteDataReader reader = await command.ExecuteReaderAsync(cancellationToken).ConfigureAwait(false);
         while (await reader.ReadAsync(cancellationToken).ConfigureAwait(false))
         {
-            jobs.Add(ReadJob(reader));
+            // One corrupt row (e.g. a playlist whose transferred bytes overshot
+            // its estimated total, or a legacy malformed timestamp) must never
+            // hide every healthy job: a throwing snapshot parks ALL
+            // NeedsInput confirmations and empties HTTP /jobs. Skip the bad
+            // row; the data-shape validators below still guard all writes.
+            try
+            {
+                jobs.Add(ReadJob(reader));
+            }
+            catch (Exception exception) when (
+                exception is ArgumentException or
+                    FormatException or
+                    InvalidDataException or
+                    System.Text.Json.JsonException or
+                    System.Security.Cryptography.CryptographicException or
+                    NotSupportedException or
+                    IOException)
+            {
+            }
         }
 
         return jobs;
@@ -262,6 +280,21 @@ public sealed class AgentJobRepository
         command.Parameters.AddWithValue("$failed", (int)DownloadJobState.Failed);
         command.Parameters.AddWithValue("$cancelled", (int)DownloadJobState.Cancelled);
         await command.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
+
+        // Playlist/folder totals are estimates assembled from per-track
+        // sizes; the running count can overshoot them. A stored
+        // bytes > total row fails record validation on read and used to
+        // poison the whole snapshot (hiding every save confirmation).
+        // Widen the total instead of trimming real progress.
+        await using SqliteCommand clamp = connection.CreateCommand();
+        clamp.CommandText = """
+            UPDATE jobs
+            SET total_bytes = bytes_transferred,
+                row_version = row_version + 1
+            WHERE id = $id AND total_bytes IS NOT NULL AND bytes_transferred > total_bytes;
+            """;
+        clamp.Parameters.AddWithValue("$id", id.ToString());
+        await clamp.ExecuteNonQueryAsync(cancellationToken).ConfigureAwait(false);
     }
 
     public async Task<bool> RetryAsync(JobId id, DateTimeOffset nowUtc, CancellationToken cancellationToken = default)
@@ -483,6 +516,18 @@ public sealed class AgentJobRepository
             headers = ValidateHeaders(details?.Headers);
         }
 
+        long bytesTransferred = reader.GetInt64(9);
+        long? totalBytes = reader.IsDBNull(10) ? null : reader.GetInt64(10);
+        if (totalBytes is { } total && bytesTransferred > total)
+        {
+            // Playlist/folder totals are estimates: the produced set can
+            // legitimately outgrow them (observed 170 MB vs 12 MB). The
+            // record and snapshot constructors reject bytes > total, which
+            // used to poison the whole job list and hide every NeedsInput
+            // confirmation. Trust the transferred count and widen the total.
+            totalBytes = bytesTransferred;
+        }
+
         return new AgentJobRecord(
             JobId.Parse(reader.GetString(0)),
             reader.GetInt32(1),
@@ -493,8 +538,8 @@ public sealed class AgentJobRepository
             (DownloadExecutionIntent)reader.GetInt32(6),
             ParseTimestamp(reader.GetString(7)),
             ParseTimestamp(reader.GetString(8)),
-            reader.GetInt64(9),
-            reader.IsDBNull(10) ? null : reader.GetInt64(10),
+            bytesTransferred,
+            totalBytes,
             headers,
             reader.IsDBNull(11) ? null : new CategoryId(Guid.ParseExact(reader.GetString(11), "N")),
             reader.IsDBNull(12) ? null : new QueueId(Guid.ParseExact(reader.GetString(12), "N")),

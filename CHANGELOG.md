@@ -16,6 +16,17 @@ All notable changes to Correntra Downloader are recorded here. Dates are UTC.
   (`agent-http-*`, fetch TypeErrors) now show "Correntra çalışmıyor"
   instead of the misleading "Liste alınamadı".
 - Malformed bridge JSON now answers 400 instead of 500.
+- **Browser handoff said "Correntra'ya devredildi" but the desktop never
+  asked where to save**: one playlist row had stored 170 MB transferred
+  against a 12 MB estimated total. Record validation rejects
+  `bytes > total`, so the whole job list threw, the snapshot came back
+  rejected, HTTP `/jobs` went empty and the desktop's 1 s poll loop died —
+  hiding every pending save confirmation. The repository now widens the
+  total instead of failing the list, skips other malformed rows, clamps
+  progress on write, and the desktop keeps polling through a rejected
+  snapshot instead of stopping forever. Activation wake-ups are re-queued
+  instead of dropped. Your parked `100MB.bin` / `Instagram.mp4` prompts
+  appear on next poll.
 
 ## 0.4.6 — 2026-09-15
 
