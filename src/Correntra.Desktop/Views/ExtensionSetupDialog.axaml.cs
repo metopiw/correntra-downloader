@@ -19,6 +19,12 @@ public partial class ExtensionSetupDialog : Window
     private readonly string? extensionFolder;
     private readonly IReadOnlyList<DetectedBrowser> browsers;
 
+    /// <summary>Creates a standalone wizard for XAML runtime loading.</summary>
+    public ExtensionSetupDialog()
+        : this(new MainViewModel())
+    {
+    }
+
     public ExtensionSetupDialog(MainViewModel mainViewModel)
     {
         InitializeComponent();
@@ -27,6 +33,7 @@ public partial class ExtensionSetupDialog : Window
 
         extensionFolder = ExtensionSetupService.LocateExtensionFolder();
         browsers = ExtensionSetupService.DetectBrowsers();
+        ExtensionPathText.Text = extensionFolder ?? LocalizationService.Current["ExtSetup.FolderMissing"];
 
         string browserNames = browsers.Count == 0
             ? LocalizationService.Current["ExtSetup.NoBrowser"]
@@ -37,18 +44,24 @@ public partial class ExtensionSetupDialog : Window
             LocalizationService.Current["ExtSetup.BrowserLine"],
             browserNames);
 
-        if (extensionFolder is not null && TopLevel.GetTopLevel(this) is { } owner)
-        {
-            ExtensionSetupService.CopyFolderToClipboard(owner, extensionFolder);
-        }
+        Opened += OnOpened;
 
         SyncConnectionState(viewModel.IsBrowserCaptureConnected);
     }
 
     protected override void OnClosed(EventArgs e)
     {
+        Opened -= OnOpened;
         viewModel.PropertyChanged -= OnViewModelPropertyChanged;
         base.OnClosed(e);
+    }
+
+    private void OnOpened(object? sender, EventArgs e)
+    {
+        if (extensionFolder is not null)
+        {
+            ExtensionSetupService.CopyFolderToClipboard(this, extensionFolder);
+        }
     }
 
     private void OnViewModelPropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
@@ -75,6 +88,14 @@ public partial class ExtensionSetupDialog : Window
         if (extensionFolder is not null)
         {
             ExtensionSetupService.OpenExtensionFolder(extensionFolder);
+        }
+    }
+
+    private void OnCopyPathClick(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
+    {
+        if (extensionFolder is not null)
+        {
+            ExtensionSetupService.CopyFolderToClipboard(this, extensionFolder);
         }
     }
 

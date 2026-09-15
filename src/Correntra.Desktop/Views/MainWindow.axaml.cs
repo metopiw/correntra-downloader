@@ -132,6 +132,14 @@ public partial class MainWindow : Window
 
     private void OnExitClick(object? sender, Avalonia.Interactivity.RoutedEventArgs e) => Close();
 
+    private async void OnExtensionSetupClick(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
+    {
+        if (DataContext is MainViewModel viewModel)
+        {
+            await new ExtensionSetupDialog(viewModel).ShowDialog(this).ConfigureAwait(true);
+        }
+    }
+
     private async void OnDialogRequested(object? sender, DialogRequestEventArgs e)
     {
         switch (e.Kind)

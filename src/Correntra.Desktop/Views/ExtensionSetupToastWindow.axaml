@@ -1,0 +1,56 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        x:Class="Correntra.Desktop.Views.ExtensionSetupToastWindow"
+        Width="380"
+        SizeToContent="Height"
+        CanResize="False"
+        ShowInTaskbar="False"
+        SystemDecorations="None"
+        Background="Transparent"
+        ShowActivated="False"
+        Icon="/Assets/correntra.ico">
+  <Border CornerRadius="12"
+          Background="{DynamicResource Corr.PanelRaised}"
+          BorderBrush="{DynamicResource Corr.Border}"
+          BorderThickness="1"
+          Margin="10,10,10,14">
+    <Grid RowDefinitions="Auto,Auto,Auto" Margin="16,14,16,14">
+      <Grid ColumnDefinitions="Auto,*" ColumnSpacing="10">
+        <Border Width="34" Height="34" CornerRadius="10" Background="{DynamicResource Corr.AccentMuted}">
+          <PathIcon Data="{StaticResource Icon.Globe}"
+                    Width="19" Height="19"
+                    Foreground="{DynamicResource Corr.Accent}" />
+        </Border>
+        <StackPanel Grid.Column="1" Spacing="2" VerticalAlignment="Center">
+          <TextBlock Text="{DynamicResource ExtSetup.Toast.Heading}"
+                     FontSize="15"
+                     FontWeight="SemiBold"
+                     Foreground="{DynamicResource Corr.TextPrimary}" />
+          <TextBlock Text="{DynamicResource ExtSetup.Toast.Kicker}"
+                     FontSize="11"
+                     Foreground="{DynamicResource Corr.Warning}" />
+        </StackPanel>
+      </Grid>
+
+      <TextBlock Grid.Row="1"
+                 Text="{DynamicResource ExtSetup.Toast.Body}"
+                 TextWrapping="Wrap"
+                 FontSize="13"
+                 Foreground="{DynamicResource Corr.TextSecondary}"
+                 Margin="0,11,0,12" />
+
+      <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right" Spacing="8">
+        <Button x:Name="LaterButton"
+                Content="{DynamicResource ExtSetup.Toast.Later}"
+                MinWidth="84" Padding="12,6"
+                Click="OnLaterClick" />
+        <Button x:Name="SetupButton"
+                Content="{DynamicResource ExtSetup.Toast.Action}"
+                MinWidth="132" Padding="12,6"
+                Background="{DynamicResource Corr.Accent}"
+                Foreground="{DynamicResource Corr.Background}"
+                Click="OnSetupClick" />
+      </StackPanel>
+    </Grid>
+  </Border>
+</Window>

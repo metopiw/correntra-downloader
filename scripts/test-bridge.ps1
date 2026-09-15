@@ -9,11 +9,15 @@ $body = @{
 # command endpoints reject requests without it (401) when one is present.
 $repoRoot = [IO.Path]::GetFullPath((Join-Path $PSScriptRoot ".."))
 $tokenFile = Join-Path $repoRoot "browser-extension\bridge-token.txt"
-$headers = @{}
-if (Test-Path -LiteralPath $tokenFile) {
-    $token = (Get-Content -LiteralPath $tokenFile -Raw).Trim()
-    if ($token) { $headers["X-Correntra-Token"] = $token }
+function Get-BridgeHeaders {
+    $result = @{}
+    if (Test-Path -LiteralPath $tokenFile) {
+        $token = (Get-Content -LiteralPath $tokenFile -Raw).Trim()
+        if ($token) { $result["X-Correntra-Token"] = $token }
+    }
+    return $result
 }
+$headers = Get-BridgeHeaders
 
 $created = Invoke-RestMethod -Uri "http://127.0.0.1:27410/takeover" -Method Post -Body $body -ContentType "application/json" -Headers $headers -TimeoutSec 15
 Write-Output ("takeover response: " + ($created | ConvertTo-Json -Compress))
@@ -27,7 +31,8 @@ if ($created.jobId) {
 $deadline = (Get-Date).AddSeconds(180)
 while ((Get-Date) -lt $deadline) {
     Start-Sleep -Seconds 3
-    $jobs = Invoke-RestMethod -Uri "http://127.0.0.1:27410/jobs" -TimeoutSec 10
+    $headers = Get-BridgeHeaders
+    $jobs = Invoke-RestMethod -Uri "http://127.0.0.1:27410/jobs" -Headers $headers -TimeoutSec 10
     foreach ($job in $jobs.jobs) {
         if ($job.state -in 9, 10, 11) {
             Write-Output ("FINAL state=" + $job.state + " file=" + $job.fileName + " bytes=" + $job.bytesTransferred + "/" + $job.totalBytes)

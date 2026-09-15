@@ -20,15 +20,20 @@ the X-Correntra-Token header.
 pinned-origin and bridge-token gates) and exposes it in every snapshot
 (`AgentSnapshot.BrowserExtensionLastSeenUtc`). The desktop derives its
 status and the wizard purely from that clock: no persisted flags; wizard
-shows once per launch when the extension has not been verified ~10 s after
-start. The extension sends an authenticated GET /jobs heartbeat every
-minute and re-reads the token file per call (agent restarts regenerate
-it). `ExtensionSetupShown` setting removed entirely.
+is offered once per launch through a non-modal bottom-right reminder when the
+extension has not been verified ~10 s after start. The guided dialog opens
+only when the user chooses setup. The main view also keeps a prominent setup/
+repair entry visible at all times, with a separate truthful live status line.
+The extension sends an authenticated
+GET /jobs heartbeat every ~30 seconds and re-reads the token file per call
+(agent restarts regenerate it). Desktop verification expires after 45 seconds;
+otherwise removing an extension after one successful heartbeat would leave a
+false green state forever. `ExtensionSetupShown` setting removed entirely.
 
-**Consequence:** A user who deliberately disables the extension sees the
-wizard on every launch — accepted as honest behaviour. Reinstalling the
-app can no longer hide the wizard. The status bar can no longer show
-green without a verified extension this agent run.
+**Consequence:** A user who deliberately disables the extension sees a
+reminder on every launch — accepted as honest behaviour without interrupting
+their work. Reinstalling the app can no longer hide setup. The status bar can
+no longer show green without a verified extension this agent run.
 
 ---
 

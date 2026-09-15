@@ -2,6 +2,30 @@
 
 All notable changes to Correntra Downloader are recorded here. Dates are UTC.
 
+## Unreleased
+
+### Changed
+- Missing browser-extension setup is now offered through a small, non-modal
+  bottom-right reminder. “Show setup” opens the existing step-by-step Chrome/
+  Edge guide; “Later” keeps the app usable, and a verified extension heartbeat
+  closes the reminder automatically.
+- The main download view now carries a permanent, prominent browser-extension
+  setup/repair card in the upper-right, while a live status line still reports
+  whether the extension is verified. The status-bar dot uses the same truthful
+  warning/success state.
+
+### Fixed
+- Removing or disabling the browser extension no longer leaves the desktop
+  claiming it is connected forever. Heartbeats now run every ~30 seconds and
+  the desktop expires a signal that has not been renewed for 45 seconds,
+  switching the prominent card back to the install tutorial action.
+- The setup guide now copies the shipped `browser-extension` path after the
+  window is actually open, displays the exact install/portable path, adds a
+  dedicated copy button, and explains where to paste it in Chrome's folder
+  picker.
+- `scripts/test-bridge.ps1` now authenticates its `/jobs` polling requests,
+  restoring the end-to-end bridge check after token enforcement was added.
+
 ## 0.4.2 — 2026-09-11
 
 ### Fixed

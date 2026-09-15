@@ -126,12 +126,12 @@ try {
 } catch {}
 
 // ---------------------------------------------------------------------------
-// Heartbeat: an authenticated GET /jobs every ~1 min (and once at SW start)
+// Heartbeat: an authenticated GET /jobs every ~30 s (and once at SW start)
 // so the desktop can tell "extension installed" from "extension missing".
 // The agent records the last verified extension contact and drives the
 // status bar + setup wizard from it. The SW cold-start beat also re-reads
 // the bridge token, so an agent restart with a fresh token recovers within
-// a minute even while the browser stays open.
+// one interval even while the browser stays open.
 // ---------------------------------------------------------------------------
 async function heartbeat() {
   try {
@@ -141,7 +141,7 @@ async function heartbeat() {
   } catch {}
 }
 try {
-  chrome.alarms.create("cc-heartbeat", { periodInMinutes: 1 });
+  chrome.alarms.create("cc-heartbeat", { periodInMinutes: 0.5 });
   chrome.alarms.onAlarm.addListener((a) => { if (a && a.name === "cc-heartbeat") void heartbeat(); });
   void heartbeat();
 } catch {}

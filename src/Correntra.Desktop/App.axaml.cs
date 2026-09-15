@@ -75,7 +75,7 @@ public partial class App : Application, IDisposable
         Observe(bridge.StartAsync(), "Desktop Agent bridge startup");
         Observe(GitHubUpdateService.RunStartupCheckAsync(mainWindow, viewModel), "GitHub update check");
 
-        // First-run extension wizard. The old "shown once, never again"
+        // First-run extension prompt. The old "shown once, never again"
         // setting was wrong twice over: it survived reinstalls (so a fresh
         // Setup never showed the wizard) and it gated on the desktop↔agent
         // pipe instead of the actual extension. The viewModel's
@@ -83,11 +83,13 @@ public partial class App : Application, IDisposable
         // extension-activity clock (MainViewModel.ApplyAgentSnapshot), so we
         // evaluate state rather than waiting for a change: the first snapshot
         // arrives via polling even when the property never transitions.
-        // Until the extension is verified, show the wizard once per launch.
-        Observe(WaitForExtensionOrShowWizardAsync(viewModel), "Extension setup wizard");
+        // Until the extension is verified, offer the wizard once per launch.
+        // A non-modal toast avoids interrupting the user before they choose
+        // to start the guided setup.
+        Observe(WaitForExtensionOrOfferSetupAsync(viewModel), "Extension setup prompt");
     }
 
-    private async Task WaitForExtensionOrShowWizardAsync(MainViewModel viewModel)
+    private async Task WaitForExtensionOrOfferSetupAsync(MainViewModel viewModel)
     {
         // Give the bridge a moment to reach the agent and pull the first
         // snapshot; the wizard decision then rests on real data.
@@ -102,7 +104,7 @@ public partial class App : Application, IDisposable
         }
 
         // ~10 s without any verified extension contact and the shipped
-        // extension folder exists → run the wizard once this launch.
+        // extension folder exists → offer the wizard once this launch.
         if (viewModel.IsBrowserCaptureConnected ||
             ExtensionSetupService.LocateExtensionFolder() is null ||
             _extensionWizardShownThisLaunch)
@@ -115,7 +117,11 @@ public partial class App : Application, IDisposable
         {
             if (CurrentMainWindow is not null)
             {
-                await new ExtensionSetupDialog(viewModel).ShowDialog(CurrentMainWindow);
+                bool showSetup = await ExtensionSetupToastWindow.ShowPrompt(CurrentMainWindow, viewModel);
+                if (showSetup && !viewModel.IsBrowserCaptureConnected)
+                {
+                    await new ExtensionSetupDialog(viewModel).ShowDialog(CurrentMainWindow);
+                }
             }
         });
     }

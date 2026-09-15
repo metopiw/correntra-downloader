@@ -123,9 +123,10 @@ Browser integration is the unpacked Manifest V3 extension in
 - User-visible strings go through `LocalizationService` in **both** Turkish
   and English; a key missing from one dictionary falls back silently.
 - The browser extension ships inside the app (`browser-extension/` next to
-  Correntra.exe) and is activated via the first-run `ExtensionSetupDialog`
-  wizard (Settings → Browser can reopen it). Do not remove the folder copy
-  step from `scripts/release.ps1` — the wizard depends on it.
+  Correntra.exe). When it has not connected, startup offers the guided
+  `ExtensionSetupDialog` through a non-modal bottom-right reminder; Settings
+  → Browser can reopen it. Do not remove the folder copy step from
+  `scripts/release.ps1` — the wizard depends on it.
 - Avalonia gotchas: incremental builds can emit "No precompiled XAML" at
   runtime — clean-rebuild before launching. `TranslateY`/`StrokeLineJoin`
   style setters are not supported on Window/Polyline.

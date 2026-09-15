@@ -68,6 +68,7 @@ public sealed class DesktopActionRequestEventArgs : EventArgs
 
 public partial class MainViewModel : ViewModelBase
 {
+    private static readonly TimeSpan BrowserExtensionHeartbeatTimeout = TimeSpan.FromSeconds(45);
     private readonly LocalizationService localizer;
     private readonly Dictionary<string, SpeedSample> speedSamples = new(StringComparer.Ordinal);
 
@@ -90,6 +91,7 @@ public partial class MainViewModel : ViewModelBase
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(BrowserCaptureStatus))]
+    [NotifyPropertyChangedFor(nameof(IsBrowserCaptureDisconnected))]
     private bool isBrowserCaptureConnected;
 
     [ObservableProperty]
@@ -142,6 +144,8 @@ public partial class MainViewModel : ViewModelBase
     public string BrowserCaptureStatus => localizer[
         IsBrowserCaptureConnected ? "Status.ExtensionConnected" : "Status.ExtensionDisconnected"];
 
+    public bool IsBrowserCaptureDisconnected => !IsBrowserCaptureConnected;
+
     public void SubmitDownload(DownloadConfirmationResult confirmation)
     {
         ArgumentNullException.ThrowIfNull(confirmation);
@@ -157,10 +161,15 @@ public partial class MainViewModel : ViewModelBase
     public void ApplyAgentSnapshot(AgentSnapshot snapshot)
     {
         ArgumentNullException.ThrowIfNull(snapshot);
-        // The snapshot's extension-activity clock is the truth for the status
-        // bar: green only when the genuine extension actually reached the
-        // agent this run, not merely when the desktop↔agent pipe is alive.
-        IsBrowserCaptureConnected = snapshot.BrowserExtensionLastSeenUtc is not null;
+        // A historical heartbeat is not proof that the extension still
+        // exists: Chrome can remove/disable it without notifying the agent.
+        // Expire the signal when the extension stops renewing it.
+        TimeSpan? heartbeatAge = snapshot.BrowserExtensionLastSeenUtc is { } lastSeen
+            ? snapshot.GeneratedAtUtc - lastSeen
+            : null;
+        IsBrowserCaptureConnected = heartbeatAge is { } age &&
+            age >= TimeSpan.Zero &&
+            age <= BrowserExtensionHeartbeatTimeout;
         string? selectedId = SelectedDownload?.JobId;
         var liveIds = new HashSet<string>(StringComparer.Ordinal);
         var aggregateSpeed = 0L;
