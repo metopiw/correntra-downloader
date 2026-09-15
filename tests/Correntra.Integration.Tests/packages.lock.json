@@ -403,11 +403,11 @@
       "correntra.agent": {
         "type": "Project",
         "dependencies": {
-          "Correntra.Core": "[0.4.6, )",
-          "Correntra.Infrastructure": "[0.4.6, )",
-          "Correntra.Media": "[0.4.6, )",
-          "Correntra.Platform.Windows": "[0.4.6, )",
-          "Correntra.Transfer": "[0.4.6, )",
+          "Correntra.Core": "[0.4.7, )",
+          "Correntra.Infrastructure": "[0.4.7, )",
+          "Correntra.Media": "[0.4.7, )",
+          "Correntra.Platform.Windows": "[0.4.7, )",
+          "Correntra.Transfer": "[0.4.7, )",
           "Microsoft.Data.Sqlite": "[8.0.30, )",
           "Microsoft.Extensions.Hosting": "[8.0.1, )",
           "Microsoft.Extensions.Logging.Console": "[8.0.1, )"
@@ -419,7 +419,7 @@
       "correntra.infrastructure": {
         "type": "Project",
         "dependencies": {
-          "Correntra.Core": "[0.4.6, )",
+          "Correntra.Core": "[0.4.7, )",
           "Microsoft.Data.Sqlite": "[8.0.30, )",
           "Microsoft.Extensions.Hosting": "[8.0.1, )",
           "Microsoft.Extensions.Logging.Console": "[8.0.1, )"
@@ -428,21 +428,21 @@
       "correntra.media": {
         "type": "Project",
         "dependencies": {
-          "Correntra.Core": "[0.4.6, )",
-          "Correntra.Transfer": "[0.4.6, )"
+          "Correntra.Core": "[0.4.7, )",
+          "Correntra.Transfer": "[0.4.7, )"
         }
       },
       "correntra.platform.windows": {
         "type": "Project",
         "dependencies": {
-          "Correntra.Core": "[0.4.6, )",
+          "Correntra.Core": "[0.4.7, )",
           "System.Security.Cryptography.ProtectedData": "[8.0.0, )"
         }
       },
       "correntra.transfer": {
         "type": "Project",
         "dependencies": {
-          "Correntra.Core": "[0.4.6, )",
+          "Correntra.Core": "[0.4.7, )",
           "System.IO.Hashing": "[8.0.0, )"
         }
       },
