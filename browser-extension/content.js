@@ -9,7 +9,9 @@ const STYLE = `
   .bar {
     position: fixed;
     height: ${BAR_HEIGHT}px;
-    padding: 0 9px;
+    display: flex;
+    align-items: center;
+    padding: 0 3px 0 9px;
     box-sizing: border-box;
     font: 600 11px/${BAR_HEIGHT}px "Segoe UI", Tahoma, sans-serif;
     color: #fff;
@@ -25,6 +27,20 @@ const STYLE = `
     z-index: 2147483647;
   }
   .bar:hover, .bar.is-open, .bar.is-busy { opacity: 1; }
+  .bar-label { line-height: ${BAR_HEIGHT}px; }
+  .close {
+    width: 16px;
+    height: 16px;
+    margin-left: 6px;
+    padding: 0;
+    border: 0;
+    border-radius: 2px;
+    background: transparent;
+    color: #fff;
+    font: 700 16px/14px Arial, sans-serif;
+    cursor: pointer;
+  }
+  .close:hover { background: rgba(92, 44, 0, .35); }
   .menu {
     position: fixed;
     min-width: ${MENU_WIDTH}px;
@@ -69,6 +85,7 @@ function text(kind, key) {
   const audio = kind === "audio";
   const tr = {
     bar: audio ? "Bu müziği indir" : "Bu videoyu indir",
+    close: "İndirme çubuğunu kapat",
     loading: "Kaliteler alınıyor…",
     empty: "Kalite bulunamadı",
     down: "Correntra çalışmıyor",
@@ -79,6 +96,7 @@ function text(kind, key) {
   };
   const en = {
     bar: audio ? "Download this audio" : "Download this video",
+    close: "Close download bar",
     loading: "Looking up qualities…",
     empty: "No qualities found",
     down: "Correntra is not running",
@@ -267,6 +285,19 @@ function closeMenu() {
   openMedia = null;
 }
 
+function closeOverlay(overlay) {
+  overlay.dismissed = true;
+  if (openMedia === overlay.element) {
+    closeMenu();
+  }
+  overlay.bar.style.display = "none";
+  overlay.menu.hidden = true;
+}
+
+function setBarLabel(overlay) {
+  overlay.label.textContent = text(overlay.kind, "bar");
+}
+
 function placeOverlay(element, overlay) {
   const rect = element.getBoundingClientRect();
   const barWidth = Math.ceil(overlay.bar.getBoundingClientRect().width || overlay.bar.offsetWidth || 128);
@@ -391,8 +422,16 @@ function attach(element) {
   const kind = mediaKind(element);
   const bar = document.createElement("div");
   bar.className = "bar";
-  bar.textContent = text(kind, "bar");
   bar.setAttribute("role", "button");
+  const label = document.createElement("span");
+  label.className = "bar-label";
+  const close = document.createElement("button");
+  close.type = "button";
+  close.className = "close";
+  close.textContent = "×";
+  close.title = text(kind, "close");
+  close.setAttribute("aria-label", text(kind, "close"));
+  bar.append(label, close);
   const menu = document.createElement("div");
   menu.className = "menu";
   menu.hidden = true;
@@ -402,8 +441,11 @@ function attach(element) {
   const overlay = {
     element,
     bar,
+    label,
+    close,
     menu,
     kind,
+    dismissed: false,
     candidateId: candidateId(),
     url: location.href,
   };
@@ -415,6 +457,11 @@ function attach(element) {
   bar.addEventListener("mouseup", block, true);
   menu.addEventListener("pointerdown", block, true);
   menu.addEventListener("mousedown", block, true);
+  close.addEventListener("pointerdown", block, true);
+  close.addEventListener("click", (event) => {
+    stopPage(event);
+    closeOverlay(overlay);
+  }, true);
   bar.addEventListener("click", (event) => {
     stopPage(event);
     if (openMedia === element && !menu.hidden) {
@@ -425,6 +472,7 @@ function attach(element) {
     void showQualities(overlay);
   }, true);
 
+  setBarLabel(overlay);
   placeOverlay(element, overlay);
 }
 
@@ -450,17 +498,31 @@ function sync() {
   }
 
   ensureRoot();
+  if (document.fullscreenElement || document.webkitFullscreenElement) {
+    closeMenu();
+    for (const overlay of overlays.values()) {
+      overlay.bar.style.display = "none";
+      overlay.menu.hidden = true;
+    }
+    return;
+  }
+
   const live = new Set(document.querySelectorAll("video, audio"));
   for (const element of live) {
     if (isUsable(element)) {
       attach(element);
       const overlay = overlays.get(element);
       if (overlay) {
+        if (overlay.dismissed) {
+          overlay.bar.style.display = "none";
+          overlay.menu.hidden = true;
+          continue;
+        }
         overlay.bar.style.display = "";
         overlay.kind = mediaKind(element);
-        overlay.bar.textContent = overlay.bar.classList.contains("is-open")
-          ? overlay.bar.textContent
-          : text(overlay.kind, "bar");
+        setBarLabel(overlay);
+        overlay.close.title = text(overlay.kind, "close");
+        overlay.close.setAttribute("aria-label", text(overlay.kind, "close"));
         placeOverlay(element, overlay);
       }
     } else if (overlays.has(element)) {
@@ -502,6 +564,7 @@ observer.observe(document.documentElement, { childList: true, subtree: true });
 window.addEventListener("scroll", sync, true);
 window.addEventListener("resize", sync);
 document.addEventListener("fullscreenchange", sync);
+document.addEventListener("webkitfullscreenchange", sync);
 
 let frame = 0;
 function tick() {

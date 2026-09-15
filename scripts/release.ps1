@@ -34,6 +34,11 @@ function Invoke-Checked([string]$Description, [scriptblock]$Command) {
 Set-Location $repositoryRoot
 Assert-RepositoryChild $releaseRoot | Out-Null
 
+# A previous package can leave top-level assets behind.  Release upload picks
+# files from this directory, so keep only artifacts generated for this run.
+Get-ChildItem -LiteralPath $releaseRoot -File -ErrorAction SilentlyContinue |
+    ForEach-Object { Remove-Item -LiteralPath $_.FullName -Force }
+
 if (Test-Path -LiteralPath $stagingRoot) {
     Remove-Item -LiteralPath $stagingRoot -Recurse -Force
 }
@@ -51,8 +56,8 @@ Invoke-Checked "SBOM generation" {
 & (Join-Path $PSScriptRoot "check-licenses.ps1")
 
 # Self-contained publish needs RID-specific assets; regenerate the lock file
-# for win-x64 here. The repository lock files are restored to their RID-less
-# state afterwards by the release operator (git checkout).
+# for win-x64 here. A regular restore at the end puts the tracked lock files
+# back into their RID-less state without requiring a destructive git command.
 Invoke-Checked "rid restore" { dotnet restore Correntra.sln -r $runtime --force-evaluate }
 
 if (-not $SkipTests) {
@@ -165,6 +170,9 @@ $hashLines = foreach ($file in $releaseFiles) {
     "$hash  $($file.Name)"
 }
 Set-Content -LiteralPath $hashFile -Value $hashLines -Encoding ascii
+
+# Do not leave the worktree with win-x64-specific lock entries after packaging.
+Invoke-Checked "rid-less lock restore" { dotnet restore Correntra.sln --force-evaluate }
 
 Write-Host "Release artifacts created in $releaseRoot"
 Get-ChildItem -LiteralPath $releaseRoot -File | Sort-Object Name | Select-Object Name, Length

@@ -2,6 +2,22 @@
 
 All notable changes to Correntra Downloader are recorded here. Dates are UTC.
 
+## 0.4.4 — 2026-09-15
+
+### Fixed
+- Release packaging now clears stale top-level artifacts before it generates
+  a new version, preventing an older Setup/portable package from appearing in
+  the next GitHub release upload.
+- Settings → Updates now checks and updates the bundled **yt-dlp** media
+  engine as well as Correntra itself.  It prefers yt-dlp's nightly release
+  (with stable fallback), verifies the downloaded executable before replacing
+  it, and never modifies an unrelated system/PATH copy. If an active video
+  download has locked the executable, the setting explains exactly when to
+  retry.
+- The browser extension's orange video/audio download bar now has an explicit
+  close button and stays hidden while the page is in fullscreen mode. Closing
+  it hides it for that media element until the page changes.
+
 ## 0.4.3 — 2026-09-15
 
 ### Changed

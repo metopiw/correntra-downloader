@@ -12,8 +12,8 @@ $exePath = Join-Path $destination $exeName
 New-Item -ItemType Directory -Force -Path $destination | Out-Null
 
 if ($Force -or -not (Test-Path -LiteralPath $exePath)) {
-    # Prefer the latest stable release; the rolling "latest" asset is the
-    # fallback so the gate keeps working when a pinned tag is pruned.
+    # Prefer the latest nightly build because site extractors change often;
+    # stable and then a known historical build keep release packaging resilient.
     $urls = @(
         "https://github.com/yt-dlp/yt-dlp-nightly-builds/releases/latest/download/$exeName",
         "https://github.com/yt-dlp/yt-dlp/releases/latest/download/$exeName",

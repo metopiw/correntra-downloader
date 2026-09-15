@@ -27,13 +27,37 @@ public partial class SettingsWindow : Window
 
     private async void OnCheckUpdatesClick(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
     {
-        UpdateStatusText.Text = LocalizationService.Current["Settings.Updates.Checking"];
-        MainViewModel mainViewModel = App.CurrentMainWindow?.DataContext as MainViewModel ?? new MainViewModel();
-        string status = await GitHubUpdateService.CheckAndOfferAsync(
-            this,
-            mainViewModel,
-            viewModel.IncludePrereleases).ConfigureAwait(true);
-        UpdateStatusText.Text = status;
+        CheckUpdatesButton.IsEnabled = false;
+        try
+        {
+            UpdateStatusText.Text = LocalizationService.Current["Settings.Updates.Checking"];
+            YtDlpUpdateResult ytDlp = await YtDlpUpdateService.UpdateAsync().ConfigureAwait(true);
+            MainViewModel mainViewModel = App.CurrentMainWindow?.DataContext as MainViewModel ?? new MainViewModel();
+            string appStatus = await GitHubUpdateService.CheckAndOfferAsync(
+                this,
+                mainViewModel,
+                viewModel.IncludePrereleases).ConfigureAwait(true);
+            UpdateStatusText.Text = FormatYtDlpUpdateStatus(ytDlp) + Environment.NewLine + appStatus;
+        }
+        finally
+        {
+            CheckUpdatesButton.IsEnabled = true;
+        }
+    }
+
+    private static string FormatYtDlpUpdateStatus(YtDlpUpdateResult result)
+    {
+        string key = result.State switch
+        {
+            YtDlpUpdateState.Updated => "Settings.Updates.YtDlp.Updated",
+            YtDlpUpdateState.AlreadyCurrent => "Settings.Updates.YtDlp.Current",
+            YtDlpUpdateState.NotBundled => "Settings.Updates.YtDlp.NotBundled",
+            YtDlpUpdateState.CouldNotReplace => "Settings.Updates.YtDlp.Busy",
+            _ => "Settings.Updates.YtDlp.Failed",
+        };
+        return result.Version is null
+            ? LocalizationService.Current[key]
+            : string.Format(System.Globalization.CultureInfo.CurrentCulture, LocalizationService.Current[key], result.Version);
     }
 
     private void OnSaveClick(object? sender, Avalonia.Interactivity.RoutedEventArgs e)

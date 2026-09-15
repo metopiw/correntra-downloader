@@ -6,6 +6,25 @@ One paragraph per decision: context → choice → consequence.
 
 ---
 
+## 2026-09-15 — yt-dlp sidecar updates are explicit and scoped to Correntra
+
+**Context:** Video-site extractors can change between Correntra releases, so
+a correct desktop update alone can leave the bundled yt-dlp unable to list
+formats. The Settings update action previously checked only Correntra's
+GitHub release.
+
+**Decision:** A manual Settings → Updates check now also fetches the newest
+yt-dlp nightly release (stable is the fallback), runs the downloaded binary
+with `--version`, then replaces only `yt-dlp.exe` shipped beside Correntra.
+It never updates a PATH copy. A locked sidecar is left untouched with a retry
+message, rather than interrupting a video download.
+
+**Consequence:** Users have one obvious recovery action for extractor drift,
+without silent background binary updates or writes to another application's
+tooling.
+
+---
+
 ## 2026-09-11 — Setup wizard driven by real extension activity, not flags
 
 **Context:** Fresh installs never saw the extension setup wizard. Two

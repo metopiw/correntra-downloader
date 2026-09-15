@@ -175,7 +175,8 @@
                 <TextBlock x:Name="CurrentVersionText" Foreground="{DynamicResource Corr.Accent}" FontSize="16" FontWeight="SemiBold" />
                 <CheckBox Content="{DynamicResource Settings.Updates.AutoCheck}" IsChecked="{Binding CheckUpdatesAtStartup}" />
                 <CheckBox Content="{DynamicResource Settings.Updates.Prerelease}" IsChecked="{Binding IncludePrereleases}" />
-                <Button Classes="secondary" Content="{DynamicResource Settings.Updates.Check}" HorizontalAlignment="Left" Click="OnCheckUpdatesClick" />
+                <TextBlock Text="{DynamicResource Settings.Updates.YtDlpHint}" TextWrapping="Wrap" Foreground="{DynamicResource Corr.TextSecondary}" />
+                <Button x:Name="CheckUpdatesButton" Classes="secondary" Content="{DynamicResource Settings.Updates.Check}" HorizontalAlignment="Left" Click="OnCheckUpdatesClick" />
                 <TextBlock x:Name="UpdateStatusText" TextWrapping="Wrap" Foreground="{DynamicResource Corr.TextSecondary}" />
               </StackPanel>
             </Border>
