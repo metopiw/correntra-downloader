@@ -2,7 +2,7 @@
 
 All notable changes to Correntra Downloader are recorded here. Dates are UTC.
 
-## Unreleased
+## 0.4.7 — 2026-09-15
 
 ### Fixed
 - **Browser overlay "Liste alınamadı" on Instagram/Twitter/YouTube even though

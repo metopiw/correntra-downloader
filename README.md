@@ -3,15 +3,23 @@
 **Akışı yakala. Hızla tamamla.**
 
 Correntra Downloader is a serious Windows 10/11 download manager for regular
-files and unprotected web media. It combines resumable segmented transfers,
-queues and scheduling, HLS/DASH handling, and an IDM-inspired—but original—
-desktop workflow. Chrome/Edge integration is the unpacked **Correntra Catch**
-extension in `browser-extension/`, which talks to the agent over
-`http://127.0.0.1:27410/` (not native messaging).
+files and unprotected web media. It combines resumable segmented transfers
+(8 segments by default, adjustable 1–32), queues and scheduling, HLS/DASH
+handling, and an IDM-inspired—but original—desktop workflow. Chrome/Edge
+integration is the unpacked **Correntra Catch** extension in
+`browser-extension/`, which talks to the agent over `http://127.0.0.1:27410/`
+(not native messaging).
+
+Social and video pages (YouTube, Instagram, Facebook, X, TikTok, Reddit and
+more) are extracted through a bundled **yt-dlp** sidecar
+(`scripts/get-yt-dlp.ps1`, Unlicense) with the shipped LGPL FFmpeg build
+(`scripts/get-ffmpeg.ps1`) merging tracks; the extension lists qualities
+(144p…4K plus audio-only) before anything is queued, and playlists expand
+into numbered per-entry files. A right-click "Download with Correntra" menu
+covers links, video and audio explicitly.
 
 The application is being developed independently. GPL/AGPL/SSPL code is not
-part of the product, and `yt-dlp.exe` is not bundled. DRM circumvention is not
-implemented.
+part of the product. DRM circumvention is not implemented.
 
 ## Development status
 
