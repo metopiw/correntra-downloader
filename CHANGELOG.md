@@ -2,6 +2,21 @@
 
 All notable changes to Correntra Downloader are recorded here. Dates are UTC.
 
+## Unreleased
+
+### Fixed
+- **Browser overlay "Liste alınamadı" on Instagram/Twitter/YouTube even though
+  yt-dlp could read the page**: the loopback bridge pinned the extension
+  Origin to `chrome-extension://<id>/` (with trailing slash) while browsers
+  send `chrome-extension://<id>` (RFC 6454, no slash). Every real extension
+  request — `/ping`, `/media/resolve`, `/takeover` — got 403 while tests
+  (which used the slash form) stayed green. The bridge now accepts both
+  slash forms and echoes the request Origin for CORS, so the exact reel from
+  the report lists 1920p/1280p/audio again. Bridge transport/auth failures
+  (`agent-http-*`, fetch TypeErrors) now show "Correntra çalışmıyor"
+  instead of the misleading "Liste alınamadı".
+- Malformed bridge JSON now answers 400 instead of 500.
+
 ## 0.4.6 — 2026-09-15
 
 ### Fixed

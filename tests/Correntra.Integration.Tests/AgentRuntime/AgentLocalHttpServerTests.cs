@@ -59,6 +59,34 @@ public sealed class AgentLocalHttpServerTests
             response.Headers.GetValues("Access-Control-Allow-Origin").Single());
     }
 
+    [Fact]
+    public async Task PinnedOriginWithoutTrailingSlashIsAccepted()
+    {
+        // Browsers send Origin as chrome-extension://<id> (RFC 6454, no
+        // trailing slash). Rejecting it caused every real extension request
+        // to 403 while tests (which used the slash form) stayed green —
+        // surfacing as "Liste alınamadı" in the overlay.
+        await using var harness = await BridgeHarness.StartAsync();
+        using var client = new HttpClient();
+        var request = new HttpRequestMessage(HttpMethod.Get, harness.BaseUri + "ping");
+        request.Headers.Add("Origin", BrowserExtensionIdentity.ExtensionOrigin.TrimEnd('/'));
+        HttpResponseMessage response = await client.SendAsync(request);
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        Assert.Equal(
+            BrowserExtensionIdentity.ExtensionOrigin.TrimEnd('/'),
+            response.Headers.GetValues("Access-Control-Allow-Origin").Single());
+    }
+
+    [Theory]
+    [InlineData("chrome-extension://bhnibkknmmodoehpaeoijnkabfdmbdjp")]
+    [InlineData("chrome-extension://bhnibkknmmodoehpaeoijnkabfdmbdjp/")]
+    public void ExtensionOriginMatcherAcceptsBothSlashForms(string origin)
+    {
+        Assert.True(BrowserExtensionIdentity.IsExtensionOrigin(origin));
+        Assert.False(BrowserExtensionIdentity.IsExtensionOrigin("chrome-extension://otherid/"));
+        Assert.False(BrowserExtensionIdentity.IsExtensionOrigin(null));
+    }
+
     [Theory]
     [InlineData("attacker.example.test:27410")]
     [InlineData("localhost.attacker.example.test:27410")]

@@ -6,6 +6,27 @@ One paragraph per decision: context → choice → consequence.
 
 ---
 
+## 2026-09-15 — Bridge Origin accepts both slash forms (browsers omit it)
+
+**Context:** The overlay showed "Liste alınamadı" on a public Instagram reel
+that anonymous yt-dlp reads fine. Live probe: `/media/resolve` with the
+browser's real Origin (`chrome-extension://<id>`, no slash) got 403, while the
+test-only slash form got 200 with qualities. RFC 6454 serialises Origin
+without a path, so the exact-match pin against the slash form rejected every
+genuine extension request; tests never caught it because they sent the slash
+form.
+
+**Decision:** `BrowserExtensionIdentity.IsExtensionOrigin()` accepts both
+forms; `AgentLocalHttpServer` uses it for the 403 gate and CORS echo (echoing
+the request value so preflights pass). Extension `reasonKey()` maps
+`agent-http-*`/fetch failures to "Correntra çalışmıyor" instead of "Liste
+alınamadı". Malformed bridge JSON is 400, not 500.
+
+**Consequence:** Do not revert to exact-match on the slash form. Key
+regeneration still touches the same 4 files; this fix changes comparison only.
+
+---
+
 ## 2026-09-15 — yt-dlp sidecar updates are explicit and scoped to Correntra
 
 **Context:** Video-site extractors can change between Correntra releases, so

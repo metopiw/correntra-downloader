@@ -111,8 +111,7 @@ public sealed class AgentLocalHttpServer
         // none and the extension sends its pinned chrome-extension:// origin.
         // The manifest's fixed key makes the ID identical on every install, so
         // a full match is safe — any other extension is rejected with 403.
-        if (origin is not null &&
-            !string.Equals(origin, BrowserExtensionIdentity.ExtensionOrigin, StringComparison.Ordinal))
+        if (origin is not null && !BrowserExtensionIdentity.IsExtensionOrigin(origin))
         {
             context.Response.StatusCode = 403;
             context.Response.Close();
@@ -202,10 +201,28 @@ public sealed class AgentLocalHttpServer
                 _ => "unsupported-command",
             };
 
-            using JsonDocument document = JsonDocument.Parse(body);
-            AgentResponseEnvelope response = await DispatchRawAsync(kind, document.RootElement.Clone())
-                .ConfigureAwait(false);
-            await WriteJsonAsync(context, response.Payload).ConfigureAwait(false);
+            JsonDocument document;
+            try
+            {
+                document = JsonDocument.Parse(body);
+            }
+            catch (JsonException)
+            {
+                // Malformed JSON (e.g. a BOM-prefixed curl file) is a client
+                // error, not a server crash — answer 400 instead of 500 so
+                // diagnostics point at the caller.
+                context.Response.StatusCode = 400;
+                context.Response.Close();
+                return;
+            }
+
+            using (document)
+            {
+                AgentResponseEnvelope response = await DispatchRawAsync(kind, document.RootElement.Clone())
+                    .ConfigureAwait(false);
+                await WriteJsonAsync(context, response.Payload).ConfigureAwait(false);
+            }
+
             return;
         }
 
@@ -215,8 +232,7 @@ public sealed class AgentLocalHttpServer
 
     private static void ApplyCors(HttpListenerResponse response, string? origin)
     {
-        if (origin is null ||
-            !string.Equals(origin, BrowserExtensionIdentity.ExtensionOrigin, StringComparison.Ordinal))
+        if (!BrowserExtensionIdentity.IsExtensionOrigin(origin))
         {
             return;
         }

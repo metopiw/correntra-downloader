@@ -342,6 +342,17 @@ function reasonKey(reason) {
   if (reason === "media-rate-limited") {
     return "rate";
   }
+  // Bridge transport/auth failures previously surfaced as generic
+  // "Liste alınamadı", hiding that Correntra itself was unreachable
+  // (403 Origin pinning, 401 stale token, CORS/preflight TypeError).
+  if (typeof reason === "string") {
+    if (reason === "empty-response" || reason === "disabled") {
+      return "down";
+    }
+    if (reason.startsWith("agent-http-") || reason.includes("Failed to fetch") || reason.includes("NetworkError") || reason.includes("Load failed")) {
+      return "down";
+    }
+  }
   return "fail";
 }
 
