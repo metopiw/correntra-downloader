@@ -2,6 +2,16 @@
 
 All notable changes to Correntra Downloader are recorded here. Dates are UTC.
 
+## 0.4.5 — 2026-09-15
+
+### Added
+- `Correntra Baslat.exe` can now be built with `scripts/build-launcher.ps1`.
+  It is a single-purpose, branded launcher for the repository's `baslat.bat`.
+
+### Changed
+- The desktop application and Correntra Başlat launcher now share a new,
+  original turquoise hummingbird app icon.
+
 ## 0.4.4 — 2026-09-15
 
 ### Fixed

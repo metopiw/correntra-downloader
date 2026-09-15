@@ -27,3 +27,6 @@ logs/
 
 # Per-run bridge secret the agent writes into the extension folder
 browser-extension/bridge-token.txt
+
+# Locally published developer launcher; recreate with scripts/build-launcher.ps1.
+Correntra Baslat.exe
