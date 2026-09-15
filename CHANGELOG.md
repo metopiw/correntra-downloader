@@ -2,7 +2,7 @@
 
 All notable changes to Correntra Downloader are recorded here. Dates are UTC.
 
-## Unreleased
+## 0.4.3 — 2026-09-15
 
 ### Changed
 - Missing browser-extension setup is now offered through a small, non-modal
