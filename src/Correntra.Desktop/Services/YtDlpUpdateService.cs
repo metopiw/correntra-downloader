@@ -20,7 +20,7 @@ public enum YtDlpUpdateState
 public sealed record YtDlpUpdateResult(YtDlpUpdateState State, string? Version = null);
 
 /// <summary>
-/// Updates only the yt-dlp executable shipped beside Correntra.  It deliberately
+/// Updates the yt-dlp executable copies shipped with Correntra. It deliberately
 /// does not touch a copy found on PATH: that may belong to another application.
 /// </summary>
 public static class YtDlpUpdateService
@@ -38,8 +38,8 @@ public static class YtDlpUpdateService
     /// </summary>
     public static async Task<YtDlpUpdateResult> UpdateAsync(CancellationToken cancellationToken = default)
     {
-        string? executablePath = FindBundledExecutable();
-        if (executablePath is null)
+        IReadOnlyList<string> executablePaths = FindBundledExecutables();
+        if (executablePaths.Count == 0)
         {
             return new YtDlpUpdateResult(YtDlpUpdateState.NotBundled);
         }
@@ -60,14 +60,25 @@ public static class YtDlpUpdateService
             return new YtDlpUpdateResult(YtDlpUpdateState.CouldNotCheck);
         }
 
-        string? installedVersion = await ReadVersionAsync(executablePath, cancellationToken).ConfigureAwait(false);
-        if (string.Equals(installedVersion, release.Version, StringComparison.OrdinalIgnoreCase))
+        string? installedVersion = await ReadVersionAsync(executablePaths[0], cancellationToken).ConfigureAwait(false);
+        bool allCopiesAreCurrent = true;
+        foreach (string executablePath in executablePaths)
+        {
+            string? version = await ReadVersionAsync(executablePath, cancellationToken).ConfigureAwait(false);
+            if (!string.Equals(version, release.Version, StringComparison.OrdinalIgnoreCase))
+            {
+                allCopiesAreCurrent = false;
+                break;
+            }
+        }
+
+        if (allCopiesAreCurrent)
         {
             return new YtDlpUpdateResult(YtDlpUpdateState.AlreadyCurrent, installedVersion);
         }
 
         string temporaryPath = Path.Combine(
-            Path.GetDirectoryName(executablePath)!,
+            Path.GetDirectoryName(executablePaths[0])!,
             $"yt-dlp.{Guid.NewGuid():N}.download");
         try
         {
@@ -80,7 +91,11 @@ public static class YtDlpUpdateService
 
             try
             {
-                File.Move(temporaryPath, executablePath, overwrite: true);
+                File.Move(temporaryPath, executablePaths[0], overwrite: true);
+                foreach (string executablePath in executablePaths.Skip(1))
+                {
+                    File.Copy(executablePaths[0], executablePath, overwrite: true);
+                }
             }
             catch (IOException exception)
             {
@@ -109,22 +124,50 @@ public static class YtDlpUpdateService
         }
     }
 
-    private static string? FindBundledExecutable()
+    private static string[] FindBundledExecutables()
     {
         string baseDirectory = AppContext.BaseDirectory;
-        foreach (string candidate in new[]
-                 {
-                     Path.Combine(baseDirectory, "yt-dlp.exe"),
-                     Path.Combine(baseDirectory, "vendor", "yt-dlp.exe"),
-                 })
+        var candidates = new List<string>
         {
-            if (File.Exists(candidate))
+            Path.Combine(baseDirectory, "yt-dlp.exe"),
+            Path.Combine(baseDirectory, "vendor", "yt-dlp.exe"),
+        };
+
+        // baslat.bat starts the desktop and the download agent from separate
+        // Debug output folders. It refreshes both folders from the repository
+        // vendor cache on every launch, so that cache and the agent copy must
+        // be updated together or a restart silently restores the old binary.
+        DirectoryInfo? targetFrameworkDirectory = new DirectoryInfo(baseDirectory.TrimEnd(
+            Path.DirectorySeparatorChar,
+            Path.AltDirectorySeparatorChar));
+        DirectoryInfo? configurationDirectory = targetFrameworkDirectory.Parent;
+        DirectoryInfo? binDirectory = configurationDirectory?.Parent;
+        DirectoryInfo? projectDirectory = binDirectory?.Parent;
+        if (configurationDirectory is not null &&
+            binDirectory is not null &&
+            projectDirectory is not null &&
+            string.Equals(projectDirectory.Name, "Correntra.Desktop", StringComparison.Ordinal) &&
+            string.Equals(binDirectory.Name, "bin", StringComparison.Ordinal) &&
+            projectDirectory.Parent is { } sourceDirectory)
+        {
+            string agentOutput = Path.Combine(
+                sourceDirectory.FullName,
+                "Correntra.Agent",
+                "bin",
+                configurationDirectory.Name,
+                targetFrameworkDirectory.Name);
+            candidates.Add(Path.Combine(agentOutput, "yt-dlp.exe"));
+            candidates.Add(Path.Combine(agentOutput, "vendor", "yt-dlp.exe"));
+            if (sourceDirectory.Parent is { } repositoryRoot)
             {
-                return candidate;
+                candidates.Add(Path.Combine(repositoryRoot.FullName, "artifacts", "vendor", "yt-dlp.exe"));
             }
         }
 
-        return null;
+        return candidates
+            .Where(File.Exists)
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .ToArray();
     }
 
     private static async Task<YtDlpRelease?> QueryLatestReleaseAsync(CancellationToken cancellationToken)

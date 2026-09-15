@@ -2,6 +2,21 @@
 
 All notable changes to Correntra Downloader are recorded here. Dates are UTC.
 
+## 0.4.6 — 2026-09-15
+
+### Fixed
+- Settings → Updates now refreshes every bundled **yt-dlp** copy used by
+  Correntra. In particular, `baslat.bat` development runs update the source
+  vendor cache plus both the desktop and separate download-agent copies, so a
+  successful update cannot be undone by the next restart.
+- The browser extension now shows a useful retry message when a site returns
+  a rate limit instead of the generic “Liste alınamadı” error.
+- The orange “Bu videoyu indir” bar's `×` button closes the bar reliably.
+  The parent click interceptor no longer consumes its own close-button event.
+- The media end-to-end check now authenticates with the agent bridge token,
+  so release validation exercises the secured media path instead of failing
+  with an unrelated 401 response.
+
 ## 0.4.5 — 2026-09-15
 
 ### Added

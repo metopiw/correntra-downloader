@@ -92,6 +92,7 @@ function text(kind, key) {
     drm: "Korumalı içerik",
     fail: "Liste alınamadı",
     login: "Oturum gerekli — sitede giriş yapın",
+    rate: "Site isteği sınırladı — birkaç dakika sonra tekrar deneyin",
     sending: "Correntra’ya gönderiliyor…",
   };
   const en = {
@@ -103,6 +104,7 @@ function text(kind, key) {
     drm: "Protected media",
     fail: "Could not list qualities",
     login: "Sign-in required on this site",
+    rate: "The site rate-limited this request — try again in a few minutes",
     sending: "Sending to Correntra…",
   };
   return (turkish ? tr : en)[key];
@@ -337,6 +339,9 @@ function reasonKey(reason) {
   if (reason === "media-login-required") {
     return "login";
   }
+  if (reason === "media-rate-limited") {
+    return "rate";
+  }
   return "fail";
 }
 
@@ -451,18 +456,29 @@ function attach(element) {
   };
   overlays.set(element, overlay);
 
-  const block = (event) => stopPage(event);
+  const isCloseEvent = (event) => event.composedPath().includes(close);
+  const block = (event) => {
+    if (!isCloseEvent(event)) {
+      stopPage(event);
+    }
+  };
   bar.addEventListener("pointerdown", block, true);
   bar.addEventListener("mousedown", block, true);
   bar.addEventListener("mouseup", block, true);
   menu.addEventListener("pointerdown", block, true);
   menu.addEventListener("mousedown", block, true);
-  close.addEventListener("pointerdown", block, true);
-  close.addEventListener("click", (event) => {
-    stopPage(event);
-    closeOverlay(overlay);
-  }, true);
+  close.addEventListener("pointerdown", stopPage, true);
+  close.addEventListener("mousedown", stopPage, true);
+  close.addEventListener("mouseup", stopPage, true);
   bar.addEventListener("click", (event) => {
+    if (isCloseEvent(event)) {
+      // This handler runs in the bar's capture phase before a close-button
+      // handler could run. Handling the button here avoids the parent click
+      // interceptor swallowing its own close action.
+      stopPage(event);
+      closeOverlay(overlay);
+      return;
+    }
     stopPage(event);
     if (openMedia === element && !menu.hidden) {
       closeMenu();

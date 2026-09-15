@@ -15,13 +15,15 @@ GitHub release.
 
 **Decision:** A manual Settings → Updates check now also fetches the newest
 yt-dlp nightly release (stable is the fallback), runs the downloaded binary
-with `--version`, then replaces only `yt-dlp.exe` shipped beside Correntra.
-It never updates a PATH copy. A locked sidecar is left untouched with a retry
-message, rather than interrupting a video download.
+with `--version`, then replaces every `yt-dlp.exe` copy shipped with Correntra
+(including the source vendor cache and separately launched agent copy used by
+`baslat.bat`). It never updates a PATH copy. A locked sidecar is left
+untouched with a retry message, rather than interrupting a video download.
 
 **Consequence:** Users have one obvious recovery action for extractor drift,
 without silent background binary updates or writes to another application's
-tooling.
+tooling; the update result now applies to the process that actually resolves
+video qualities.
 
 ---
 

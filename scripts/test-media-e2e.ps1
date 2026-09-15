@@ -21,7 +21,23 @@ $body = @{
     }
 } | ConvertTo-Json -Depth 4
 
-$created = Invoke-RestMethod -Uri "http://127.0.0.1:27410/media/start" -Method Post -Body $body -ContentType "application/json" -TimeoutSec 30
+# The bridge token is regenerated whenever the agent starts. The media
+# endpoints are command endpoints too, so this test must send the same token
+# as the unpacked extension rather than silently testing an unauthenticated
+# legacy path.
+$repoRoot = [IO.Path]::GetFullPath((Join-Path $PSScriptRoot ".."))
+$tokenFile = Join-Path $repoRoot "browser-extension\bridge-token.txt"
+function Get-BridgeHeaders {
+    $result = @{}
+    if (Test-Path -LiteralPath $tokenFile) {
+        $token = (Get-Content -LiteralPath $tokenFile -Raw).Trim()
+        if ($token) { $result["X-Correntra-Token"] = $token }
+    }
+    return $result
+}
+
+$headers = Get-BridgeHeaders
+$created = Invoke-RestMethod -Uri "http://127.0.0.1:27410/media/start" -Method Post -Body $body -ContentType "application/json" -Headers $headers -TimeoutSec 30
 Write-Output ("media/start response: " + ($created | ConvertTo-Json -Compress))
 
 $jobId = $created.jobId
@@ -31,13 +47,14 @@ if (-not $jobId) {
 }
 
 $confirmBody = @{ jobId = $jobId; startImmediately = $true } | ConvertTo-Json
-$confirmed = Invoke-RestMethod -Uri "http://127.0.0.1:27410/confirm" -Method Post -Body $confirmBody -ContentType "application/json" -TimeoutSec 10
+$confirmed = Invoke-RestMethod -Uri "http://127.0.0.1:27410/confirm" -Method Post -Body $confirmBody -ContentType "application/json" -Headers $headers -TimeoutSec 10
 Write-Output ("confirm response: " + ($confirmed | ConvertTo-Json -Compress))
 
 $deadline = (Get-Date).AddSeconds(300)
 while ((Get-Date) -lt $deadline) {
     Start-Sleep -Seconds 4
-    $jobs = Invoke-RestMethod -Uri "http://127.0.0.1:27410/jobs" -TimeoutSec 10
+    $headers = Get-BridgeHeaders
+    $jobs = Invoke-RestMethod -Uri "http://127.0.0.1:27410/jobs" -Headers $headers -TimeoutSec 10
     foreach ($job in $jobs.jobs) {
         $thisJobId = $job.jobId
         if (-not $thisJobId) { $thisJobId = $job.id }
