@@ -221,6 +221,49 @@
             </Button>
           </StackPanel>
 
+          <!-- Persistent setup entry docked in the toolbar, left of search.
+               It used to float over the download rows and cover them. -->
+          <Border Grid.Column="5"
+                  HorizontalAlignment="Right"
+                  VerticalAlignment="Center"
+                  Margin="8,0"
+                  Padding="10,7"
+                  CornerRadius="10"
+                  Background="#2CF0B45B"
+                  BorderBrush="{DynamicResource Corr.Warning}"
+                  BorderThickness="1.5">
+            <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="10">
+              <Border Width="30" Height="30" CornerRadius="9" Background="#38F0B45B" VerticalAlignment="Center">
+                <PathIcon Data="{StaticResource Icon.Globe}"
+                          Width="17" Height="17"
+                          Foreground="{DynamicResource Corr.Warning}" />
+              </Border>
+              <StackPanel Grid.Column="1" Spacing="1" VerticalAlignment="Center">
+                <TextBlock Text="{DynamicResource ExtSetup.Card.Persistent}"
+                           FontSize="13" FontWeight="Bold"
+                           Foreground="{DynamicResource Corr.TextPrimary}"
+                           TextTrimming="CharacterEllipsis" />
+                <StackPanel Orientation="Horizontal" Spacing="6">
+                  <Ellipse IsVisible="{Binding IsBrowserCaptureConnected}"
+                           Width="7" Height="7" Fill="{DynamicResource Corr.Success}" />
+                  <Ellipse IsVisible="{Binding IsBrowserCaptureDisconnected}"
+                           Width="7" Height="7" Fill="{DynamicResource Corr.Warning}" />
+                  <TextBlock Text="{Binding BrowserCaptureStatus}"
+                             FontSize="11"
+                             Foreground="{DynamicResource Corr.TextSecondary}"
+                             TextTrimming="CharacterEllipsis" />
+                </StackPanel>
+              </StackPanel>
+              <Button Grid.Column="2"
+                      Content="{DynamicResource ExtSetup.Card.Action}"
+                      Padding="10,6"
+                      VerticalAlignment="Center"
+                      Background="{DynamicResource Corr.Warning}"
+                      Foreground="{DynamicResource Corr.Background}"
+                      Click="OnExtensionSetupClick" />
+            </Grid>
+          </Border>
+
           <Grid Grid.Column="6" Margin="8,0" VerticalAlignment="Center">
             <TextBox Classes="searchBox"
                      Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}"
@@ -399,48 +442,6 @@
             </StackPanel>
           </Border>
 
-          <!-- Persistent, high-visibility setup entry. It remains visible
-               after connection so installation/repair is never hidden. -->
-          <Border
-                  HorizontalAlignment="Right"
-                  VerticalAlignment="Top"
-                  Width="390"
-                  Margin="0,48,18,0"
-                  Padding="15,13"
-                  CornerRadius="12"
-                  Background="#2CF0B45B"
-                  BorderBrush="{DynamicResource Corr.Warning}"
-                  BorderThickness="2"
-                  ZIndex="10">
-            <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="11">
-              <Border Width="38" Height="38" CornerRadius="11" Background="#38F0B45B">
-                <PathIcon Data="{StaticResource Icon.Globe}"
-                          Width="21" Height="21"
-                          Foreground="{DynamicResource Corr.Warning}" />
-              </Border>
-              <StackPanel Grid.Column="1" Spacing="3" VerticalAlignment="Center">
-                <TextBlock Text="{DynamicResource ExtSetup.Card.Persistent}"
-                           FontSize="15" FontWeight="Bold"
-                           Foreground="{DynamicResource Corr.TextPrimary}" />
-                <StackPanel Orientation="Horizontal" Spacing="6">
-                  <Ellipse IsVisible="{Binding IsBrowserCaptureConnected}"
-                           Width="7" Height="7" Fill="{DynamicResource Corr.Success}" />
-                  <Ellipse IsVisible="{Binding IsBrowserCaptureDisconnected}"
-                           Width="7" Height="7" Fill="{DynamicResource Corr.Warning}" />
-                  <TextBlock Text="{Binding BrowserCaptureStatus}"
-                             FontSize="11"
-                             Foreground="{DynamicResource Corr.TextSecondary}" />
-                </StackPanel>
-              </StackPanel>
-              <Button Grid.Column="2"
-                      Content="{DynamicResource ExtSetup.Card.Action}"
-                      Padding="12,7"
-                      VerticalAlignment="Center"
-                      Background="{DynamicResource Corr.Warning}"
-                      Foreground="{DynamicResource Corr.Background}"
-                      Click="OnExtensionSetupClick" />
-            </Grid>
-          </Border>
         </Grid>
       </Grid>
 

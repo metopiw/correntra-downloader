@@ -2,6 +2,13 @@
 
 All notable changes to Correntra Downloader are recorded here. Dates are UTC.
 
+## Unreleased
+
+### Changed
+- The orange browser-extension setup card moved from floating over the
+  download rows into the toolbar, left of the search box — it no longer
+  covers downloaded files.
+
 ## 0.4.7 — 2026-09-15
 
 ### Fixed
