@@ -13,8 +13,7 @@ if (Test-Path -LiteralPath $publishRoot) {
 
 & dotnet publish $launcherProject `
     -c Release `
-    -r win-x64 `
-    --self-contained true `
+    --self-contained false `
     -p:PublishSingleFile=true `
     -p:DebugType=None `
     -o $publishRoot
