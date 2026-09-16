@@ -41,6 +41,17 @@ public sealed class YtDlpRoutingTests
     }
 
     [Fact]
+    public void PlaylistTemplateKeepsADotBeforeTheExtension()
+    {
+        string template = YtDlpExecutor.BuildPlaylistOutputTemplate(
+            Path.Combine("Videos", "My Playlist.mp4"));
+
+        Assert.Equal(
+            Path.Combine("Videos", "%(playlist_index)03d - My Playlist.%(ext)s"),
+            template);
+    }
+
+    [Fact]
     public void QualityListPutsHighestVideoFirstAndAudioLast()
     {
         List<MediaQualityOption> ranked = AgentCommandDispatcher.RankQualities(

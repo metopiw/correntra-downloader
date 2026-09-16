@@ -1,3 +1,4 @@
+using System.Collections.Concurrent;
 using System.IO;
 using System.Net.Http;
 using System.Net.Http.Headers;
@@ -24,7 +25,7 @@ public static class VirusTotalService
     private const string ApiBase = "https://www.virustotal.com/api/v3/files/";
 
     private static readonly HttpClient Http = CreateClient();
-    private static readonly Dictionary<string, VirusTotalReport> Cache = new(StringComparer.OrdinalIgnoreCase);
+    private static readonly ConcurrentDictionary<string, VirusTotalReport> Cache = new(StringComparer.OrdinalIgnoreCase);
 
     public static bool IsConfigured(string? apiKey) => !string.IsNullOrWhiteSpace(apiKey);
 

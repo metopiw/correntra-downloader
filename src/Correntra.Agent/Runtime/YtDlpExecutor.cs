@@ -407,6 +407,18 @@ public sealed partial class YtDlpExecutor
         return result;
     }
 
+    /// <summary>
+    /// Builds the yt-dlp <c>-o</c> template for playlist mode. The dot before
+    /// <c>%(ext)s</c> is literal: yt-dlp expands the placeholder without one,
+    /// so omitting it glues the extension onto the title ("Titlemp4").
+    /// </summary>
+    internal static string BuildPlaylistOutputTemplate(string outputPath)
+    {
+        string directory = Path.GetDirectoryName(outputPath)!;
+        string stem = Path.GetFileNameWithoutExtension(outputPath);
+        return Path.Combine(directory, "%(playlist_index)03d - " + stem + ".%(ext)s");
+    }
+
     private static List<string> BuildDownloadArguments(
         string url,
         string? formatSelector,
@@ -428,9 +440,7 @@ public sealed partial class YtDlpExecutor
         else
         {
             // Playlist mode: keep the user's folder tidy — one numbered file per entry.
-            string directory = Path.GetDirectoryName(outputPath)!;
-            string stem = Path.GetFileNameWithoutExtension(outputPath);
-            arguments[arguments.IndexOf("-o") + 1] = Path.Combine(directory, "%(playlist_index)03d - " + stem + "%(ext)s");
+            arguments[arguments.IndexOf("-o") + 1] = BuildPlaylistOutputTemplate(outputPath);
         }
         if (cookieBrowser is not null)
         {

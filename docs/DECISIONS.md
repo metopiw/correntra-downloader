@@ -6,6 +6,41 @@ One paragraph per decision: context → choice → consequence.
 
 ---
 
+## 2026-09-16 — Desktop pipe contract carries the extension heartbeat (wire parity)
+
+**Context:** The status bar never showed the extension as connected even
+with the extension installed and heartbeating: the agent serialized
+`browserExtensionLastSeenUtc` in every `AgentSnapshot`, but the
+desktop's private pipe wire type had no such property, so `ToDomain()`
+silently dropped it and every heartbeat read null.
+
+**Decision:** `AgentSnapshotWire` now declares the nullable field and
+passes it through, covered by a pipe round-trip test; no agent change
+was needed. Any future `AgentSnapshot` field must be added to the wire
+type in the same commit, or the desktop silently ignores it.
+
+**Consequence:** Status, reminder and wizard reflect real extension
+contact again. Do not add snapshot fields without updating the wire
+contract and its test.
+
+---
+
+## 2026-09-16 — Playlist -o template keeps the literal dot before %(ext)s
+
+**Context:** Playlist entries landed as `001 - Titlemp4` with no usable
+extension: yt-dlp expands `%(ext)s` without a dot (its own docs write
+`%(title)s.%(ext)s`), and the template concatenated stem + placeholder
+directly. The coordinator comment already promised `001 - Title.mp4`.
+
+**Decision:** Extract `YtDlpExecutor.BuildPlaylistOutputTemplate()` with
+the literal dot and pin it with a unit test; single-item downloads keep
+their exact-path `-o` behaviour.
+
+**Consequence:** Numbered playlist files carry real extensions; do not
+rebuild the template inline elsewhere — reuse the helper.
+
+---
+
 ## 2026-09-15 — Bridge Origin accepts both slash forms (browsers omit it)
 
 **Context:** The overlay showed "Liste alınamadı" on a public Instagram reel

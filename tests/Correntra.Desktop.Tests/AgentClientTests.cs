@@ -71,4 +71,56 @@ public sealed class AgentClientTests
         Assert.Equal(jobId, job.Id);
         Assert.Equal(256, result.Snapshot.AggregateBytesPerSecond);
     }
+
+    [Fact]
+    public async Task SnapshotPreservesBrowserExtensionHeartbeat()
+    {
+        string pipeName = "Correntra.Tests." + Guid.NewGuid().ToString("N");
+        var protocol = new LengthPrefixedJsonProtocol();
+        DateTimeOffset heartbeat = DateTimeOffset.UtcNow.AddSeconds(-5);
+        Task server = Task.Run(async () =>
+        {
+            await using var pipe = new NamedPipeServerStream(
+                pipeName,
+                PipeDirection.InOut,
+                1,
+                PipeTransmissionMode.Byte,
+                PipeOptions.Asynchronous);
+            await pipe.WaitForConnectionAsync();
+            using JsonDocument? request = await protocol.ReadAsync<JsonDocument>(pipe);
+            Assert.NotNull(request);
+            string requestId = request.RootElement.GetProperty("requestId").GetString()!;
+            var snapshot = new AgentSnapshot(
+                DateTimeOffset.UtcNow,
+                [],
+                aggregateBytesPerSecond: 0,
+                browserExtensionLastSeenUtc: heartbeat);
+            await protocol.WriteAsync(pipe, new
+            {
+                protocolVersion = 1,
+                kind = "response",
+                requestId,
+                timestampUtc = DateTimeOffset.UtcNow,
+                payload = new
+                {
+                    accepted = true,
+                    reason = (string?)null,
+                    hostVersion = "0.1.0",
+                    jobId = (string?)null,
+                    snapshot,
+                },
+            });
+        });
+
+        var client = new AgentClient(pipeName);
+        AgentCommandResult result = await client.GetSnapshotAsync();
+        await server;
+
+        Assert.True(result.Accepted);
+        Assert.NotNull(result.Snapshot);
+        Assert.NotNull(result.Snapshot.BrowserExtensionLastSeenUtc);
+        Assert.Equal(
+            heartbeat.ToUnixTimeSeconds(),
+            result.Snapshot.BrowserExtensionLastSeenUtc.Value.ToUnixTimeSeconds());
+    }
 }

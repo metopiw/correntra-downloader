@@ -195,11 +195,14 @@ public sealed class AgentClient
 
         public long AggregateBytesPerSecond { get; init; }
 
+        public DateTimeOffset? BrowserExtensionLastSeenUtc { get; init; }
+
         public AgentSnapshot ToDomain() => new(
             GeneratedAtUtc,
             Jobs.Select(static job => job.ToDomain()),
             Queues.Select(static queue => queue.ToDomain()),
-            AggregateBytesPerSecond);
+            AggregateBytesPerSecond,
+            BrowserExtensionLastSeenUtc);
     }
 
     private sealed class DownloadJobSnapshotWire

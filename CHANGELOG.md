@@ -8,6 +8,21 @@ All notable changes to Correntra Downloader are recorded here. Dates are UTC.
 - The orange browser-extension setup card moved from floating over the
   download rows into the toolbar, left of the search box — it no longer
   covers downloaded files.
+- `Correntra Baslat.exe` is now framework-dependent (~2.5 MB instead of
+  ~94 MB). It still just starts `baslat.bat` next to it; .NET 8 runtime
+  is required (already needed for development).
+
+### Fixed
+- **Extension status never turned green**: the agent sent
+  `browserExtensionLastSeenUtc` in every snapshot but the desktop pipe
+  contract dropped the field, so the heartbeat always read null. The
+  status bar, setup reminder and wizard now see real extension contact.
+- **Playlist entries landed as `001 - Titlemp4`**: the yt-dlp `-o`
+  template glued `%(ext)s` onto the title without the literal dot, so
+  files had no real extension. Numbered entries now land as
+  `001 - Title.mp4`.
+- VirusTotal session cache is now thread-safe (concurrent completion
+  scans could corrupt the lookup dictionary).
 
 ## 0.4.7 — 2026-09-15
 
