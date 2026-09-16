@@ -121,14 +121,14 @@
       "correntra.media": {
         "type": "Project",
         "dependencies": {
-          "Correntra.Core": "[0.4.7, )",
-          "Correntra.Transfer": "[0.4.7, )"
+          "Correntra.Core": "[0.4.8, )",
+          "Correntra.Transfer": "[0.4.8, )"
         }
       },
       "correntra.transfer": {
         "type": "Project",
         "dependencies": {
-          "Correntra.Core": "[0.4.7, )",
+          "Correntra.Core": "[0.4.8, )",
           "System.IO.Hashing": "[8.0.0, )"
         }
       },
